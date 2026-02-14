@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>画像4枚キャンバス合成ツール</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f6f8fb;
+  margin: 20px;
+  padding-bottom: 420px;
+  text-align: center;
+}
+
+h3 {
+  margin-bottom: 6px;
+}
+
+#dropZone {
+  width: 620px;
+  height: 200px;
+  margin: 0 auto 14px auto;
+  border: 3px dashed #6aa4ff;
+  background: #eef4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 12px;
+  font-size: 18px;
+}
+
+#dropZone.dragover {
+  background: #dce9ff;
+}
+
+#stockArea {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stockThumb {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  border: 2px solid #bbb;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+canvas {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  background: white;
+}
+
+#board {
+  border: 5px solid #444;
+}
+
+#layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 600px;
+  margin: 0 auto 6px auto;
+}
+
+button {
+  margin: 5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #6aa4ff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #558ae0;
+}
+
+.dropFrame {
+  position: absolute;
+  border: 2px dashed #aaa;
+  pointer-events: none;
+}
+
+</style>
+</head>
+<body>
+
+<h2>画像4枚キャンバス合成ツール</h2>
+
+
+
+<div style="width:630px;margin:0 auto 10px auto">
+<div id="dropZone">画像をドロップ</div>
+<div id="stockArea"></div>
+</div>
+
+<div id="layout">
+
+<div>
+<h3>調整エリア</h3>
+<canvas id="editor" width="300" height="300"></canvas>
+<br>
+<button id="addBtn">キャンバスに入れる</button>
+<button id="whiteBgBtn">白背景を付与</button>
+</div>
+
+<div>
+<div class="panelHeader">
+<h3>合成キャンバス</h3>
+<button id="deleteBtn" style="display:none">削除</button>
+</div>
+<div style="position:relative">
+<canvas id="board" width="600" height="600"></canvas>
+
+</div>
+</div>
+
+<div>
+<div class="panelHeader">
+<h3>完成画像</h3>
+<button id="resultWhiteBgBtn">完成画像に白背景を付与</button>
+</div>
+<br>
+<img id="resultImg" width="600" height="600" draggable="true" style="border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);background:white" />
+</div>
+
+</div>
+
+<script>
+const dropZone = document.getElementById("dropZone");
+const stockArea = document.getElementById("stockArea");
+
+const editor = document.getElementById("editor");
+const ectx = editor.getContext("2d");
+
+const board = document.getElementById("board");
+const bctx = board.getContext("2d");
+
+
+
+const resultImg = document.getElementById("resultImg");
+
+let editingImage = null;
+let crop = null;
+let scale = 1;
+
+let stockImages = [];
+let boardImages = new Array(4).fill(null);
+
+let selectedIndex = null;
+let resultWhiteBg = false;
+let dragStartIndex = null;
+
+let dragging = false;
+let lastX = 0;
+let lastY = 0;
+
+function updateStockUI(){
+  stockArea.innerHTML = "";
+  stockImages.slice(0,4).forEach(img=>{
+    const el = document.createElement("img");
+    el.src = img.src;
+    el.className = "stockThumb";
+    el.onclick = ()=>{
+      editingImage = img;
+      crop = initCrop(img);
+      scale = 1;
+      drawEditor();
+    };
+    stockArea.appendChild(el);
+  });
+}
+
+function drawEditor() {
+  if (!editingImage) return;
+  ectx.clearRect(0,0,300,300);
+  const size = crop.size / scale;
+  ectx.drawImage(editingImage, crop.x, crop.y, size, size, 0, 0, 300, 300);
+}
+
+function initCrop(img) {
+  const size = Math.min(img.width, img.height);
+  return { x:(img.width-size)/2, y:(img.height-size)/2, size };
+}
+
+function clampCrop() {
+  const size = crop.size / scale;
+  crop.x = Math.max(0, Math.min(crop.x, editingImage.width-size));
+  crop.y = Math.max(0, Math.min(crop.y, editingImage.height-size));
+}
+
+editor.addEventListener("pointerdown", e=>{
+  editor.setPointerCapture(e.pointerId);
+  dragging=true;
+  lastX=e.clientX;
+  lastY=e.clientY;
+});
+
+editor.addEventListener("pointermove", e=>{
+  if(!dragging||!editingImage) return;
+  const size=crop.size/scale;
+  crop.x-=(e.clientX-lastX)*(size/300);
+  crop.y-=(e.clientY-lastY)*(size/300);
+  clampCrop();
+  lastX=e.clientX;
+  lastY=e.clientY;
+  drawEditor();
+});
+
+window.addEventListener("pointermove", e=>{
+  if(!dragging||!editingImage) return;
+  const size=crop.size/scale;
+  crop.x-=(e.clientX-lastX)*(size/300);
+  crop.y-=(e.clientY-lastY)*(size/300);
+  clampCrop();
+  lastX=e.clientX;
+  lastY=e.clientY;
+  drawEditor();
+});
+
+window.addEventListener("pointerup",()=>dragging=false);
+
+editor.addEventListener("pointerup",e=>{
+  dragging=false;
+  try{editor.releasePointerCapture(e.pointerId);}catch{}
+});
+
+editor.addEventListener("wheel",e=>{
+  if(!editingImage)return;
+  e.preventDefault();
+  scale+=e.deltaY*-0.001;
+  scale=Math.min(Math.max(1,scale),12);
+  clampCrop();
+  drawEditor();
+});
+
+// ===== 白背景付与 =====
+document.getElementById("whiteBgBtn").onclick=()=>{
+  if(!editingImage)return;
+
+  const temp=document.createElement("canvas");
+  temp.width=editingImage.width;
+  temp.height=editingImage.height;
+  const ctx=temp.getContext("2d");
+
+  ctx.fillStyle="white";
+  ctx.fillRect(0,0,temp.width,temp.height);
+  ctx.drawImage(editingImage,0,0);
+
+  const img=new Image();
+  img.src=temp.toDataURL();
+  img.onload=()=>{
+    editingImage=img;
+    drawEditor();
+  };
+};
+
+// ===== ドロップ =====
+dropZone.addEventListener("dragover",e=>{
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("dragover"));
+
+dropZone.addEventListener("drop",e=>{
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  [...e.dataTransfer.files].forEach(file=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        stockImages.push(img);
+        updateStockUI();
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+});
+
+function drawBoard(){
+  bctx.clearRect(0,0,600,600);
+  const size=300;
+
+  boardImages.forEach((img,i)=>{
+    if(!img)return;
+    const dx=(i%2)*size;
+    const dy=Math.floor(i/2)*size;
+    bctx.drawImage(img,dx,dy,size,size);
+  });
+
+  drawResult();
+}
+
+
+function drawResult(){
+  const temp=document.createElement("canvas");
+  temp.width=600;
+  temp.height=600;
+  const ctx=temp.getContext("2d");
+
+  if(resultWhiteBg){
+    ctx.fillStyle="white";
+    ctx.fillRect(0,0,600,600);
+  }
+
+  boardImages.forEach((img,i)=>{
+    if(!img)return;
+    const dx=(i%2)*300;
+    const dy=Math.floor(i/2)*300;
+    ctx.drawImage(img,dx,dy,300,300);
+  });
+
+  resultImg.src=temp.toDataURL();
+}
+
+// 追加
+document.getElementById("addBtn").onclick=()=>{
+  if(!editingImage)return;
+
+  const slot=boardImages.findIndex(x=>x===null);
+  if(slot===-1)return;
+
+  const temp=document.createElement("canvas");
+  temp.width=300;
+  temp.height=300;
+  const tctx=temp.getContext("2d");
+
+  const size=crop.size/scale;
+  tctx.drawImage(editingImage,crop.x,crop.y,size,size,0,0,300,300);
+
+  const img=new Image();
+  img.src=temp.toDataURL();
+  img.onload=()=>{
+    boardImages[slot]=img;
+    drawBoard();
+  };
+};
+
+// ===== ドラッグ移動導線 =====
+board.addEventListener("pointerdown",e=>{
+  const rect=board.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+
+  const index=Math.floor(y/300)*2+Math.floor(x/300);
+  if(boardImages[index])dragStartIndex=index;
+});
+
+
+
+board.addEventListener("pointerup",e=>{
+  if(dragStartIndex===null)return;
+
+  const rect=board.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+
+  const drop=Math.floor(y/300)*2+Math.floor(x/300);
+
+  if(boardImages[drop]&&drop!==dragStartIndex){
+    [boardImages[dragStartIndex],boardImages[drop]]=[boardImages[drop],boardImages[dragStartIndex]];
+  }
+
+  dragStartIndex=null;
+  
+  drawBoard();
+});
+
+// 削除
+const deleteBtn=document.getElementById("deleteBtn");
+
+board.addEventListener("click",e=>{
+  const rect=board.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+
+  const index=Math.floor(y/300)*2+Math.floor(x/300);
+  if(!boardImages[index])return;
+
+  selectedIndex=index;
+  deleteBtn.style.display="inline-block";
+});
+
+deleteBtn.onclick=()=>{
+  if(selectedIndex===null)return;
+  boardImages[selectedIndex]=null;
+  selectedIndex=null;
+  deleteBtn.style.display="none";
+  drawBoard();
+};
+
+// 完成画像 白背景
+const resultWhiteBgBtn=document.getElementById("resultWhiteBgBtn");
+resultWhiteBgBtn.onclick=()=>{
+  resultWhiteBg=true;
+  drawResult();
+};
+
+</script>
+</body>
+</html>
