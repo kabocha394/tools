@@ -465,6 +465,17 @@
             display: block;
         }
 
+        /* 結合表示時はグリッドを非表示 */
+        .generation-box.combined .grid-2x2,
+        .generation-box.combined .progress-dots,
+        .generation-box.combined .grid-status {
+            display: none;
+        }
+
+        .generation-box.combined .result-image-section {
+            display: block;
+        }
+
         .combined-image-container {
             width: 100%;
             max-width: 560px;
@@ -476,6 +487,10 @@
             max-width: 100%;
             border-radius: 10px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            display: block;
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
         }
 
         /* プログレスドット */
@@ -600,14 +615,14 @@
                     </div>
                 </div>
 
-                <!-- 結合結果 -->
+                <!-- 結合結果（生成ボックス内に表示） -->
                 <div class="result-image-section" id="resultImageSection">
-                    <hr style="margin: 28px 0; border-color: #e2e8f0;">
                     <div class="combined-image-container">
                         <img class="combined-image" id="combinedImage" src="" alt="結合画像">
                         <div class="result-info">
                             <span class="badge ready">4枚結合完了</span>
                             <span id="resultSize"></span>
+                            <button id="resetBtn" style="padding:4px 12px;background:#edf2f7;border:none;border-radius:12px;font-size:0.875em;font-weight:600;color:#4a5568;cursor:pointer;">やり直す</button>
                         </div>
                     </div>
                 </div>
@@ -655,7 +670,6 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const grid = document.getElementById('grid2x2');
         const statusText = document.getElementById('statusText');
-        const resultImageSection = document.getElementById('resultImageSection');
         const combinedImage = document.getElementById('combinedImage');
         const resultSize = document.getElementById('resultSize');
         const slotBtns = document.querySelectorAll('.slot-btn');
@@ -983,7 +997,7 @@
             setActiveSlot(i);
             updateDots();
             updateStatus();
-            resultImageSection.classList.remove('visible');
+            document.querySelector('.generation-box').classList.remove('combined');
             downloadBtn.style.display = 'none';
         }
 
@@ -1026,7 +1040,8 @@
                         const url = out.toDataURL('image/png');
                         combinedImage.src = url;
                         resultSize.textContent = `${S * 2} × ${S * 2}px`;
-                        resultImageSection.classList.add('visible');
+                        // グリッドを非表示にして結合画像を生成ボックス内に表示
+                        document.querySelector('.generation-box').classList.add('combined');
                         downloadBtn.style.display = 'block';
                         downloadBtn.onclick = () => {
                             const a = document.createElement('a');
@@ -1039,6 +1054,23 @@
                 img.src = dataUrl;
             });
         }
+
+        // ── リセット ──────────────────────────────────────────
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            cellImages = [null, null, null, null];
+            const nums = ['①','②','③','④'];
+            const texts = ['左上','右上','左下','右下'];
+            for (let i = 0; i < CELL_COUNT; i++) {
+                const cell = document.getElementById(`cell${i}`);
+                cell.innerHTML = `<div class="grid-cell-empty"><span class="slot-num">${nums[i]}</span><span>${texts[i]}</span></div>`;
+                slotBtns[i].classList.remove('filled');
+            }
+            document.querySelector('.generation-box').classList.remove('combined');
+            downloadBtn.style.display = 'none';
+            setActiveSlot(0);
+            updateDots();
+            updateStatus();
+        });
 
         // ── 初期化 ────────────────────────────────────────────
         resizePaletteCanvas();
