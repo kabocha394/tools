@@ -7,11 +7,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
@@ -20,15 +16,9 @@
             padding: 24px;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+        header { text-align: center; margin-bottom: 40px; }
 
         h1 {
             color: #1a202c;
@@ -41,10 +31,7 @@
             gap: 12px;
         }
 
-        .subtitle {
-            color: #718096;
-            font-size: 1.1em;
-        }
+        .subtitle { color: #718096; font-size: 1.1em; }
 
         .main-content {
             display: grid;
@@ -54,9 +41,7 @@
         }
 
         @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+            .main-content { grid-template-columns: 1fr; }
         }
 
         .sidebar {
@@ -66,13 +51,8 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .control-section {
-            margin-bottom: 24px;
-        }
-
-        .control-section:last-child {
-            margin-bottom: 0;
-        }
+        .control-section { margin-bottom: 24px; }
+        .control-section:last-child { margin-bottom: 0; }
 
         .control-label {
             font-size: 0.875em;
@@ -84,7 +64,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* スロット選択 */
         .slot-selector {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -125,7 +104,6 @@
             color: #4c51bf;
         }
 
-        /* パレット（クロップエリア） */
         .palette-wrapper {
             position: relative;
             width: 100%;
@@ -133,7 +111,7 @@
             background: #1a202c;
             border-radius: 12px;
             overflow: hidden;
-            cursor: crosshair;
+            cursor: default;
             border: 2px solid #2d3748;
         }
 
@@ -143,28 +121,20 @@
             display: block;
         }
 
-        .palette-overlay {
+        .palette-empty {
             position: absolute;
             inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
             pointer-events: none;
         }
 
-        /* クロップ枠 */
-        .crop-frame {
-            position: absolute;
-            border: 2px solid rgba(255,255,255,0.9);
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
-            pointer-events: none;
-        }
+        .palette-empty-icon { font-size: 3em; margin-bottom: 8px; opacity: 0.5; }
+        .palette-empty-text { font-size: 0.85em; opacity: 0.7; text-align: center; }
 
-        .crop-frame::before,
-        .crop-frame::after {
-            content: '';
-            position: absolute;
-            background: white;
-        }
-
-        /* パレット操作ヒント */
         .palette-hint {
             position: absolute;
             bottom: 8px;
@@ -177,33 +147,9 @@
             border-radius: 20px;
             pointer-events: none;
             white-space: nowrap;
+            display: none;
         }
 
-        /* パレット空状態 */
-        .palette-empty {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #718096;
-            pointer-events: none;
-        }
-
-        .palette-empty-icon {
-            font-size: 3em;
-            margin-bottom: 8px;
-            opacity: 0.5;
-        }
-
-        .palette-empty-text {
-            font-size: 0.85em;
-            opacity: 0.7;
-            text-align: center;
-        }
-
-        /* ドロップゾーン */
         .drop-zone {
             border: 2px dashed #cbd5e0;
             border-radius: 12px;
@@ -214,35 +160,12 @@
             cursor: pointer;
         }
 
-        .drop-zone:hover {
-            border-color: #4c51bf;
-            background: #edf2f7;
-        }
+        .drop-zone:hover { border-color: #4c51bf; background: #edf2f7; }
+        .drop-zone.drag-over { background: #e6fffa; border-color: #38b2ac; transform: scale(1.02); }
+        .drop-zone-icon { font-size: 2.5em; margin-bottom: 8px; }
+        .drop-zone-text { color: #2d3748; font-size: 0.95em; font-weight: 600; margin-bottom: 2px; }
+        .drop-zone-subtext { color: #a0aec0; font-size: 0.8em; }
 
-        .drop-zone.drag-over {
-            background: #e6fffa;
-            border-color: #38b2ac;
-            transform: scale(1.02);
-        }
-
-        .drop-zone-icon {
-            font-size: 2.5em;
-            margin-bottom: 8px;
-        }
-
-        .drop-zone-text {
-            color: #2d3748;
-            font-size: 0.95em;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .drop-zone-subtext {
-            color: #a0aec0;
-            font-size: 0.8em;
-        }
-
-        /* セット確定ボタン */
         .set-btn {
             width: 100%;
             padding: 12px;
@@ -263,10 +186,7 @@
             box-shadow: 0 4px 8px rgba(76,81,191,0.3);
         }
 
-        .set-btn:disabled {
-            background: #a0aec0;
-            cursor: not-allowed;
-        }
+        .set-btn:disabled { background: #a0aec0; cursor: not-allowed; }
 
         .info-card {
             background: #edf2f7;
@@ -275,25 +195,10 @@
             margin-top: 4px;
         }
 
-        .info-card h4 {
-            color: #2d3748;
-            font-size: 0.875em;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+        .info-card h4 { color: #2d3748; font-size: 0.875em; font-weight: 600; margin-bottom: 8px; }
+        .info-card ol { color: #4a5568; font-size: 0.875em; line-height: 1.7; padding-left: 20px; }
+        .info-card li { margin-bottom: 4px; }
 
-        .info-card ol {
-            color: #4a5568;
-            font-size: 0.875em;
-            line-height: 1.7;
-            padding-left: 20px;
-        }
-
-        .info-card li {
-            margin-bottom: 4px;
-        }
-
-        /* 右パネル */
         .result-panel {
             background: white;
             border-radius: 16px;
@@ -308,11 +213,7 @@
             margin-bottom: 24px;
         }
 
-        .result-title {
-            color: #1a202c;
-            font-size: 1.25em;
-            font-weight: 700;
-        }
+        .result-title { color: #1a202c; font-size: 1.25em; font-weight: 700; }
 
         .download-btn {
             padding: 10px 20px;
@@ -333,97 +234,41 @@
             box-shadow: 0 4px 8px rgba(76,81,191,0.3);
         }
 
-        /* 生成ボックス（2x2グリッド） */
+        /* 生成ボックス */
         .generation-box {
             width: 100%;
             max-width: 560px;
             margin: 0 auto;
         }
 
-        .grid-2x2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 4px;
+        /* 正方形canvasラッパー */
+        .output-canvas-wrapper {
+            width: 100%;
             aspect-ratio: 1;
-            background: #e2e8f0;
+            position: relative;
             border-radius: 12px;
             overflow: hidden;
-            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .grid-cell {
-            position: relative;
-            overflow: hidden;
-            background: #f7fafc;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .grid-cell:hover {
-            filter: brightness(0.9);
-        }
-
-        .grid-cell.active-slot {
-            outline: 3px solid #4c51bf;
-            outline-offset: -3px;
-            z-index: 1;
-        }
-
-        .grid-cell img {
+        #outputCanvas {
             width: 100%;
             height: 100%;
-            object-fit: cover;
             display: block;
-        }
-
-        .grid-cell-empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #a0aec0;
-            gap: 4px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-
-        .grid-cell-empty .slot-num {
-            font-size: 1.8em;
-            opacity: 0.4;
-            line-height: 1;
-        }
-
-        .grid-cell .clear-cell-btn {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            background: rgba(0,0,0,0.65);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            width: 22px;
-            height: 22px;
-            font-size: 13px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
         }
 
-        .grid-cell:hover .clear-cell-btn {
-            opacity: 1;
-        }
-
-        .grid-cell .clear-cell-btn:hover {
-            background: rgba(220,38,38,0.9);
+        /* 選択中セルのハイライト */
+        .cell-highlight {
+            position: absolute;
+            pointer-events: none;
+            border: 4px solid #4c51bf;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4);
+            transition: left 0.15s ease, top 0.15s ease;
         }
 
         .grid-status {
-            margin-top: 16px;
+            margin-top: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -441,65 +286,14 @@
             color: #4a5568;
         }
 
-        .badge.ready {
-            background: #c6f6d5;
-            color: #276749;
-        }
+        .badge.ready { background: #c6f6d5; color: #276749; }
 
-        .result-info {
-            margin-top: 12px;
-            color: #718096;
-            font-size: 0.875em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        /* 結合結果画像 */
-        .result-image-section {
-            display: none;
-        }
-
-        .result-image-section.visible {
-            display: block;
-        }
-
-        /* 結合表示時はグリッドを非表示 */
-        .generation-box.combined .grid-2x2,
-        .generation-box.combined .progress-dots,
-        .generation-box.combined .grid-status {
-            display: none;
-        }
-
-        .generation-box.combined .result-image-section {
-            display: block;
-        }
-
-        .combined-image-container {
-            width: 100%;
-            max-width: 560px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .combined-image {
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            display: block;
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-        }
-
-        /* プログレスドット */
         .progress-dots {
             display: flex;
             gap: 8px;
             align-items: center;
             justify-content: center;
-            margin-top: 16px;
+            margin-top: 14px;
         }
 
         .progress-dot {
@@ -510,572 +304,452 @@
             transition: background 0.3s;
         }
 
-        .progress-dot.filled {
-            background: #4c51bf;
-        }
-
-        .progress-dot.active {
-            background: #4c51bf;
-            box-shadow: 0 0 0 3px rgba(76,81,191,0.25);
-        }
+        .progress-dot.filled { background: #4c51bf; }
+        .progress-dot.active { background: #4c51bf; box-shadow: 0 0 0 3px rgba(76,81,191,0.25); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>
-                <span>🎨</span>
-                画像結合ツール
-            </h1>
-            <p class="subtitle">4枚の画像を正方形グリッドに結合</p>
-        </header>
+<div class="container">
+    <header>
+        <h1><span>🎨</span>画像結合ツール</h1>
+        <p class="subtitle">4枚の画像を正方形グリッドに結合</p>
+    </header>
 
-        <div class="main-content">
-            <aside class="sidebar">
-                <!-- スロット選択 -->
-                <div class="control-section">
-                    <label class="control-label">セル選択</label>
-                    <div class="slot-selector">
-                        <button class="slot-btn active" data-slot="0">① 左上</button>
-                        <button class="slot-btn" data-slot="1">② 右上</button>
-                        <button class="slot-btn" data-slot="2">③ 左下</button>
-                        <button class="slot-btn" data-slot="3">④ 右下</button>
+    <div class="main-content">
+        <aside class="sidebar">
+            <div class="control-section">
+                <label class="control-label">セル選択</label>
+                <div class="slot-selector">
+                    <button class="slot-btn active" data-slot="0">① 左上</button>
+                    <button class="slot-btn" data-slot="1">② 右上</button>
+                    <button class="slot-btn" data-slot="2">③ 左下</button>
+                    <button class="slot-btn" data-slot="3">④ 右下</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <label class="control-label">画像を追加</label>
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-icon">📸</div>
+                    <div class="drop-zone-text">ドラッグ&ドロップ</div>
+                    <div class="drop-zone-subtext">またはクリックして選択</div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <label class="control-label">パレット（拡縮・切り抜き）</label>
+                <div class="palette-wrapper" id="paletteWrapper">
+                    <canvas class="palette-canvas" id="paletteCanvas"></canvas>
+                    <div class="palette-empty" id="paletteEmpty">
+                        <div class="palette-empty-icon">🖼️</div>
+                        <div class="palette-empty-text">画像を追加してください<br>ホイール／ピンチで拡縮<br>ドラッグで移動</div>
                     </div>
+                    <div class="palette-hint" id="paletteHint">スクロール：拡縮 ／ ドラッグ：移動</div>
+                </div>
+                <button class="set-btn" id="setBtn" disabled>✂️ 切り抜いてセルにセット</button>
+            </div>
+
+            <div class="info-card">
+                <h4>📋 使い方</h4>
+                <ol>
+                    <li>セルを選択（①〜④）</li>
+                    <li>画像をドロップして追加</li>
+                    <li>パレットで拡縮・位置調整</li>
+                    <li>「セット」ボタンで確定</li>
+                    <li>4枚揃ったらダウンロード</li>
+                </ol>
+            </div>
+        </aside>
+
+        <main class="result-panel">
+            <div class="result-header">
+                <h2 class="result-title">生成ボックス</h2>
+            </div>
+
+            <div class="generation-box">
+                <div class="output-canvas-wrapper" id="outputWrapper">
+                    <canvas id="outputCanvas"></canvas>
+                    <div class="cell-highlight" id="cellHighlight"></div>
                 </div>
 
-                <!-- 画像追加 -->
-                <div class="control-section">
-                    <label class="control-label">画像を追加</label>
-                    <div class="drop-zone" id="dropZone">
-                        <div class="drop-zone-icon">📸</div>
-                        <div class="drop-zone-text">ドラッグ&ドロップ</div>
-                        <div class="drop-zone-subtext">またはクリックして選択</div>
-                    </div>
+                <div class="progress-dots">
+                    <div class="progress-dot active" id="dot0"></div>
+                    <div class="progress-dot" id="dot1"></div>
+                    <div class="progress-dot" id="dot2"></div>
+                    <div class="progress-dot" id="dot3"></div>
                 </div>
 
-                <!-- パレット（クロップ・拡縮エリア） -->
-                <div class="control-section">
-                    <label class="control-label">パレット（拡縮・切り抜き）</label>
-                    <div class="palette-wrapper" id="paletteWrapper">
-                        <canvas class="palette-canvas" id="paletteCanvas"></canvas>
-                        <div class="crop-frame" id="cropFrame" style="display:none;"></div>
-                        <div class="palette-empty" id="paletteEmpty">
-                            <div class="palette-empty-icon">🖼️</div>
-                            <div class="palette-empty-text">画像を追加してください<br>ホイール／ピンチで拡縮<br>ドラッグで移動</div>
-                        </div>
-                        <div class="palette-hint" id="paletteHint" style="display:none;">スクロール：拡縮 ／ ドラッグ：移動</div>
-                    </div>
-                    <button class="set-btn" id="setBtn" disabled>✂️ 切り抜いてセルにセット</button>
+                <div class="grid-status">
+                    <span id="statusText">セルを選んで画像をセットしてください</span>
                 </div>
+            </div>
 
-                <div class="info-card">
-                    <h4>📋 使い方</h4>
-                    <ol>
-                        <li>セルを選択（①〜④）</li>
-                        <li>画像をドロップして追加</li>
-                        <li>パレットで拡縮・位置調整</li>
-                        <li>「セット」ボタンで確定</li>
-                        <li>4枚揃ったらダウンロード</li>
-                    </ol>
+            <!-- 完成画像エリア -->
+            <div id="resultSection" style="display:none; margin-top:32px;">
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin-bottom:28px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                    <h3 style="color:#1a202c; font-size:1.1em; font-weight:700;">✅ 完成画像</h3>
+                    <button id="finalDownloadBtn" style="padding:10px 20px; background:#4c51bf; color:white; border:none; border-radius:8px; font-size:0.9em; font-weight:600; cursor:pointer; transition:all 0.2s;">💾 ダウンロード</button>
                 </div>
-            </aside>
-
-            <main class="result-panel">
-                <div class="result-header">
-                    <h2 class="result-title">生成ボックス</h2>
-                    <button class="download-btn" id="downloadBtn">💾 ダウンロード</button>
+                <div style="width:100%; max-width:560px; margin:0 auto; text-align:center;">
+                    <img id="resultImg" src="" alt="完成画像" style="width:100%; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.12); display:block;">
+                    <p id="resultSizeText" style="margin-top:10px; color:#718096; font-size:0.85em;"></p>
                 </div>
-
-                <!-- 2x2グリッド -->
-                <div class="generation-box">
-                    <div class="grid-2x2" id="grid2x2">
-                        <div class="grid-cell active-slot" data-cell="0" id="cell0">
-                            <div class="grid-cell-empty"><span class="slot-num">①</span><span>左上</span></div>
-                        </div>
-                        <div class="grid-cell" data-cell="1" id="cell1">
-                            <div class="grid-cell-empty"><span class="slot-num">②</span><span>右上</span></div>
-                        </div>
-                        <div class="grid-cell" data-cell="2" id="cell2">
-                            <div class="grid-cell-empty"><span class="slot-num">③</span><span>左下</span></div>
-                        </div>
-                        <div class="grid-cell" data-cell="3" id="cell3">
-                            <div class="grid-cell-empty"><span class="slot-num">④</span><span>右下</span></div>
-                        </div>
-                    </div>
-
-                    <div class="progress-dots">
-                        <div class="progress-dot active" id="dot0"></div>
-                        <div class="progress-dot" id="dot1"></div>
-                        <div class="progress-dot" id="dot2"></div>
-                        <div class="progress-dot" id="dot3"></div>
-                    </div>
-
-                    <div class="grid-status">
-                        <span id="statusText">セルを選んで画像をセットしてください</span>
-                    </div>
-                </div>
-
-                <!-- 結合結果（生成ボックス内に表示） -->
-                <div class="result-image-section" id="resultImageSection">
-                    <div class="combined-image-container">
-                        <img class="combined-image" id="combinedImage" src="" alt="結合画像">
-                        <div class="result-info">
-                            <span class="badge ready">4枚結合完了</span>
-                            <span id="resultSize"></span>
-                            <button id="resetBtn" style="padding:4px 12px;background:#edf2f7;border:none;border-radius:12px;font-size:0.875em;font-weight:600;color:#4a5568;cursor:pointer;">やり直す</button>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
+</div>
 
-    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+<input type="file" id="fileInput" accept="image/*" style="display:none;">
 
-    <script>
-    (() => {
-        // ── State ──────────────────────────────────────────────
-        const CELL_COUNT = 4;
-        const CELL_SIZE = 600; // 出力1セルのpxサイズ
+<script>
+(() => {
+    const CELL_PX = 600;
+    const OUT = CELL_PX * 2;
 
-        let activeSlot = 0;
-        let cellImages = [null, null, null, null]; // DataURL per cell
+    let activeSlot = 0;
+    let cellImgs = [null, null, null, null]; // ImageBitmap or HTMLImageElement
 
-        // パレット状態
-        let palette = {
-            img: null,
-            scale: 1,
-            offsetX: 0,
-            offsetY: 0,
-            isDragging: false,
-            dragStartX: 0,
-            dragStartY: 0,
-            dragOffsetX: 0,
-            dragOffsetY: 0,
-            // タッチピンチ
-            lastTouchDist: 0,
-            lastTouchMidX: 0,
-            lastTouchMidY: 0,
-        };
+    let pal = {
+        img: null, scale: 1, ox: 0, oy: 0,
+        dragging: false, sx: 0, sy: 0, sox: 0, soy: 0,
+        lastDist: 0,
+    };
 
-        // ── DOM refs ──────────────────────────────────────────
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const paletteWrapper = document.getElementById('paletteWrapper');
-        const paletteCanvas = document.getElementById('paletteCanvas');
-        const paletteEmpty = document.getElementById('paletteEmpty');
-        const paletteHint = document.getElementById('paletteHint');
-        const cropFrame = document.getElementById('cropFrame');
-        const setBtn = document.getElementById('setBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const grid = document.getElementById('grid2x2');
-        const statusText = document.getElementById('statusText');
-        const combinedImage = document.getElementById('combinedImage');
-        const resultSize = document.getElementById('resultSize');
-        const slotBtns = document.querySelectorAll('.slot-btn');
+    const dropZone       = document.getElementById('dropZone');
+    const fileInput      = document.getElementById('fileInput');
+    const paletteWrapper = document.getElementById('paletteWrapper');
+    const palCanvas      = document.getElementById('paletteCanvas');
+    const paletteEmpty   = document.getElementById('paletteEmpty');
+    const paletteHint    = document.getElementById('paletteHint');
+    const setBtn         = document.getElementById('setBtn');
+    const outputCanvas   = document.getElementById('outputCanvas');
+    const outputWrapper  = document.getElementById('outputWrapper');
+    const cellHighlight  = document.getElementById('cellHighlight');
+    const statusText     = document.getElementById('statusText');
+    const slotBtns       = document.querySelectorAll('.slot-btn');
 
-        const ctx = paletteCanvas.getContext('2d');
+    const palCtx = palCanvas.getContext('2d');
+    const outCtx = outputCanvas.getContext('2d');
 
-        // ── スロット選択 ──────────────────────────────────────
-        slotBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setActiveSlot(parseInt(btn.dataset.slot));
-            });
-        });
+    outputCanvas.width  = OUT;
+    outputCanvas.height = OUT;
 
-        // グリッドセルをクリックしてスロット切替
-        for (let i = 0; i < CELL_COUNT; i++) {
-            const cell = document.getElementById(`cell${i}`);
-            cell.addEventListener('click', (e) => {
-                if (e.target.classList.contains('clear-cell-btn')) return;
-                setActiveSlot(i);
-            });
-        }
+    // ── 出力canvas再描画 ─────────────────────────────────
+    function redrawOutput() {
+        outCtx.clearRect(0, 0, OUT, OUT);
 
-        function setActiveSlot(i) {
-            activeSlot = i;
-            slotBtns.forEach((b, idx) => {
-                b.classList.toggle('active', idx === i);
-            });
-            // グリッドセルのハイライト
-            for (let j = 0; j < CELL_COUNT; j++) {
-                document.getElementById(`cell${j}`).classList.toggle('active-slot', j === i);
-            }
-            // ドットアニメーション
-            updateDots();
-        }
+        const pos = [[0,0],[CELL_PX,0],[0,CELL_PX],[CELL_PX,CELL_PX]];
+        const labels = ['①','②','③','④'];
 
-        // ── ドロップゾーン ────────────────────────────────────
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', e => {
-            if (e.target.files[0]) loadImageToPalette(e.target.files[0]);
-            fileInput.value = '';
-        });
-        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', e => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            const f = e.dataTransfer.files[0];
-            if (f && f.type.startsWith('image/')) loadImageToPalette(f);
-        });
-
-        function loadImageToPalette(file) {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const img = new Image();
-                img.onload = () => {
-                    palette.img = img;
-                    // 初期スケール：パレットに収まるように
-                    const pw = paletteCanvas.offsetWidth || 300;
-                    const ph = paletteCanvas.offsetHeight || 300;
-                    const scaleW = pw / img.width;
-                    const scaleH = ph / img.height;
-                    palette.scale = Math.max(scaleW, scaleH);
-                    // センタリング
-                    palette.offsetX = (pw - img.width * palette.scale) / 2;
-                    palette.offsetY = (ph - img.height * palette.scale) / 2;
-
-                    paletteEmpty.style.display = 'none';
-                    paletteHint.style.display = 'block';
-                    setBtn.disabled = false;
-                    resizePaletteCanvas();
-                    drawPalette();
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // ── Canvas リサイズ ───────────────────────────────────
-        function resizePaletteCanvas() {
-            const rect = paletteWrapper.getBoundingClientRect();
-            paletteCanvas.width = rect.width;
-            paletteCanvas.height = rect.height;
-        }
-
-        window.addEventListener('resize', () => {
-            if (palette.img) {
-                resizePaletteCanvas();
-                drawPalette();
-            }
-        });
-
-        // ── パレット描画 ──────────────────────────────────────
-        function drawPalette() {
-            if (!palette.img) return;
-            const W = paletteCanvas.width;
-            const H = paletteCanvas.height;
-            ctx.clearRect(0, 0, W, H);
-
-            // 背景
-            ctx.fillStyle = '#1a202c';
-            ctx.fillRect(0, 0, W, H);
-
-            // 画像
-            ctx.drawImage(
-                palette.img,
-                palette.offsetX, palette.offsetY,
-                palette.img.width * palette.scale,
-                palette.img.height * palette.scale
-            );
-
-            // クロップ枠（正方形、中央）
-            const size = Math.min(W, H) * 0.85;
-            const cx = (W - size) / 2;
-            const cy = (H - size) / 2;
-
-            // オーバーレイ（暗い部分）
-            ctx.fillStyle = 'rgba(0,0,0,0.45)';
-            // 上
-            ctx.fillRect(0, 0, W, cy);
-            // 下
-            ctx.fillRect(0, cy + size, W, H - cy - size);
-            // 左
-            ctx.fillRect(0, cy, cx, size);
-            // 右
-            ctx.fillRect(cx + size, cy, W - cx - size, size);
-
-            // 枠線
-            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(cx, cy, size, size);
-
-            // グリッド補助線
-            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-            ctx.lineWidth = 1;
-            for (let t = 1; t < 3; t++) {
-                ctx.beginPath();
-                ctx.moveTo(cx + size * t / 3, cy);
-                ctx.lineTo(cx + size * t / 3, cy + size);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(cx, cy + size * t / 3);
-                ctx.lineTo(cx + size, cy + size * t / 3);
-                ctx.stroke();
-            }
-
-            // コーナーハンドル
-            const hs = 16;
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            const corners = [
-                [cx, cy, 1, 1], [cx + size, cy, -1, 1],
-                [cx, cy + size, 1, -1], [cx + size, cy + size, -1, -1]
-            ];
-            corners.forEach(([x, y, dx, dy]) => {
-                ctx.beginPath();
-                ctx.moveTo(x + dx * hs, y);
-                ctx.lineTo(x, y);
-                ctx.lineTo(x, y + dy * hs);
-                ctx.stroke();
-            });
-        }
-
-        // ── ホイールズーム ────────────────────────────────────
-        paletteWrapper.addEventListener('wheel', e => {
-            e.preventDefault();
-            if (!palette.img) return;
-            const rect = paletteCanvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-            zoomAt(mx, my, e.deltaY < 0 ? 1.1 : 0.9);
-        }, { passive: false });
-
-        function zoomAt(mx, my, factor) {
-            const newScale = Math.max(0.1, Math.min(20, palette.scale * factor));
-            const sf = newScale / palette.scale;
-            palette.offsetX = mx - sf * (mx - palette.offsetX);
-            palette.offsetY = my - sf * (my - palette.offsetY);
-            palette.scale = newScale;
-            drawPalette();
-        }
-
-        // ── マウスドラッグ ────────────────────────────────────
-        paletteWrapper.addEventListener('mousedown', e => {
-            if (!palette.img) return;
-            palette.isDragging = true;
-            palette.dragStartX = e.clientX;
-            palette.dragStartY = e.clientY;
-            palette.dragOffsetX = palette.offsetX;
-            palette.dragOffsetY = palette.offsetY;
-            paletteWrapper.style.cursor = 'grabbing';
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!palette.isDragging) return;
-            palette.offsetX = palette.dragOffsetX + (e.clientX - palette.dragStartX);
-            palette.offsetY = palette.dragOffsetY + (e.clientY - palette.dragStartY);
-            drawPalette();
-        });
-
-        window.addEventListener('mouseup', () => {
-            palette.isDragging = false;
-            paletteWrapper.style.cursor = 'default';
-        });
-
-        // ── タッチ操作 ────────────────────────────────────────
-        paletteWrapper.addEventListener('touchstart', e => {
-            e.preventDefault();
-            if (!palette.img) return;
-            if (e.touches.length === 1) {
-                palette.isDragging = true;
-                palette.dragStartX = e.touches[0].clientX;
-                palette.dragStartY = e.touches[0].clientY;
-                palette.dragOffsetX = palette.offsetX;
-                palette.dragOffsetY = palette.offsetY;
-            } else if (e.touches.length === 2) {
-                palette.isDragging = false;
-                palette.lastTouchDist = getTouchDist(e.touches);
-                const mid = getTouchMid(e.touches);
-                palette.lastTouchMidX = mid.x;
-                palette.lastTouchMidY = mid.y;
-            }
-        }, { passive: false });
-
-        paletteWrapper.addEventListener('touchmove', e => {
-            e.preventDefault();
-            if (!palette.img) return;
-            if (e.touches.length === 1 && palette.isDragging) {
-                palette.offsetX = palette.dragOffsetX + (e.touches[0].clientX - palette.dragStartX);
-                palette.offsetY = palette.dragOffsetY + (e.touches[0].clientY - palette.dragStartY);
-                drawPalette();
-            } else if (e.touches.length === 2) {
-                const dist = getTouchDist(e.touches);
-                const mid = getTouchMid(e.touches);
-                const factor = dist / palette.lastTouchDist;
-                const rect = paletteCanvas.getBoundingClientRect();
-                zoomAt(mid.x - rect.left, mid.y - rect.top, factor);
-                palette.lastTouchDist = dist;
-                palette.lastTouchMidX = mid.x;
-                palette.lastTouchMidY = mid.y;
-            }
-        }, { passive: false });
-
-        paletteWrapper.addEventListener('touchend', () => {
-            palette.isDragging = false;
-        });
-
-        function getTouchDist(touches) {
-            const dx = touches[0].clientX - touches[1].clientX;
-            const dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        function getTouchMid(touches) {
-            return {
-                x: (touches[0].clientX + touches[1].clientX) / 2,
-                y: (touches[0].clientY + touches[1].clientY) / 2,
-            };
-        }
-
-        // ── セットボタン ──────────────────────────────────────
-        setBtn.addEventListener('click', () => {
-            if (!palette.img) return;
-            const cropDataUrl = getCroppedDataUrl();
-            cellImages[activeSlot] = cropDataUrl;
-            updateCell(activeSlot, cropDataUrl);
-            updateDots();
-            updateStatus();
-
-            // 次の空きセルへ自動移動
-            const next = cellImages.findIndex((v, i) => v === null && i !== activeSlot);
-            if (next !== -1) setActiveSlot(next);
-            else if (cellImages.every(v => v !== null)) combineAll();
-        });
-
-        // ── クロップ取得 ──────────────────────────────────────
-        function getCroppedDataUrl() {
-            const W = paletteCanvas.width;
-            const H = paletteCanvas.height;
-            const size = Math.min(W, H) * 0.85;
-            const cx = (W - size) / 2;
-            const cy = (H - size) / 2;
-
-            // 実際の画像座標
-            const imgX = (cx - palette.offsetX) / palette.scale;
-            const imgY = (cy - palette.offsetY) / palette.scale;
-            const imgSize = size / palette.scale;
-
-            const out = document.createElement('canvas');
-            out.width = CELL_SIZE;
-            out.height = CELL_SIZE;
-            const octx = out.getContext('2d');
-            octx.drawImage(palette.img, imgX, imgY, imgSize, imgSize, 0, 0, CELL_SIZE, CELL_SIZE);
-            return out.toDataURL('image/png');
-        }
-
-        // ── セル更新 ──────────────────────────────────────────
-        function updateCell(i, dataUrl) {
-            const cell = document.getElementById(`cell${i}`);
-            cell.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = dataUrl;
-            cell.appendChild(img);
-
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'clear-cell-btn';
-            clearBtn.innerHTML = '×';
-            clearBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                clearCell(i);
-            });
-            cell.appendChild(clearBtn);
-
-            // スロットボタンを「済」表示
-            slotBtns[i].classList.add('filled');
-        }
-
-        function clearCell(i) {
-            cellImages[i] = null;
-            const cell = document.getElementById(`cell${i}`);
-            const labels = ['①左上','②右上','③左下','④右下'];
-            const nums = ['①','②','③','④'];
-            const texts = ['左上','右上','左下','右下'];
-            cell.innerHTML = `<div class="grid-cell-empty"><span class="slot-num">${nums[i]}</span><span>${texts[i]}</span></div>`;
-            slotBtns[i].classList.remove('filled');
-            setActiveSlot(i);
-            updateDots();
-            updateStatus();
-            document.querySelector('.generation-box').classList.remove('combined');
-            downloadBtn.style.display = 'none';
-        }
-
-        // ── ドット更新 ────────────────────────────────────────
-        function updateDots() {
-            for (let i = 0; i < CELL_COUNT; i++) {
-                const dot = document.getElementById(`dot${i}`);
-                dot.classList.remove('active', 'filled');
-                if (i === activeSlot) dot.classList.add('active');
-                else if (cellImages[i]) dot.classList.add('filled');
-            }
-        }
-
-        // ── ステータス更新 ────────────────────────────────────
-        function updateStatus() {
-            const filled = cellImages.filter(v => v !== null).length;
-            if (filled === 4) {
-                statusText.innerHTML = '<span class="badge ready">4枚揃いました！</span>';
+        pos.forEach(([x, y], i) => {
+            if (cellImgs[i]) {
+                outCtx.drawImage(cellImgs[i], x, y, CELL_PX, CELL_PX);
             } else {
-                statusText.textContent = `${filled} / 4 枚セット済み`;
+                outCtx.fillStyle = i % 2 === 0 ? '#e8edf2' : '#dde3ea';
+                outCtx.fillRect(x, y, CELL_PX, CELL_PX);
+
+                outCtx.fillStyle = 'rgba(160,174,192,0.65)';
+                outCtx.font = `bold ${CELL_PX * 0.22}px sans-serif`;
+                outCtx.textAlign = 'center';
+                outCtx.textBaseline = 'middle';
+                outCtx.fillText(labels[i], x + CELL_PX / 2, y + CELL_PX / 2);
             }
-        }
-
-        // ── 全結合 ────────────────────────────────────────────
-        function combineAll() {
-            const S = CELL_SIZE;
-            const out = document.createElement('canvas');
-            out.width = S * 2;
-            out.height = S * 2;
-            const octx = out.getContext('2d');
-
-            const positions = [[0,0],[S,0],[0,S],[S,S]];
-            let loaded = 0;
-            cellImages.forEach((dataUrl, i) => {
-                const img = new Image();
-                img.onload = () => {
-                    octx.drawImage(img, positions[i][0], positions[i][1], S, S);
-                    loaded++;
-                    if (loaded === 4) {
-                        const url = out.toDataURL('image/png');
-                        combinedImage.src = url;
-                        resultSize.textContent = `${S * 2} × ${S * 2}px`;
-                        // グリッドを非表示にして結合画像を生成ボックス内に表示
-                        document.querySelector('.generation-box').classList.add('combined');
-                        downloadBtn.style.display = 'block';
-                        downloadBtn.onclick = () => {
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `combined-grid-${Date.now()}.png`;
-                            a.click();
-                        };
-                    }
-                };
-                img.src = dataUrl;
-            });
-        }
-
-        // ── リセット ──────────────────────────────────────────
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            cellImages = [null, null, null, null];
-            const nums = ['①','②','③','④'];
-            const texts = ['左上','右上','左下','右下'];
-            for (let i = 0; i < CELL_COUNT; i++) {
-                const cell = document.getElementById(`cell${i}`);
-                cell.innerHTML = `<div class="grid-cell-empty"><span class="slot-num">${nums[i]}</span><span>${texts[i]}</span></div>`;
-                slotBtns[i].classList.remove('filled');
-            }
-            document.querySelector('.generation-box').classList.remove('combined');
-            downloadBtn.style.display = 'none';
-            setActiveSlot(0);
-            updateDots();
-            updateStatus();
         });
 
-        // ── 初期化 ────────────────────────────────────────────
-        resizePaletteCanvas();
-        updateStatus();
-    })();
-    </script>
+        // グリッド区切り線
+        outCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+        outCtx.lineWidth = 6;
+        outCtx.beginPath();
+        outCtx.moveTo(CELL_PX, 0); outCtx.lineTo(CELL_PX, OUT);
+        outCtx.moveTo(0, CELL_PX); outCtx.lineTo(OUT, CELL_PX);
+        outCtx.stroke();
+    }
+
+    redrawOutput();
+
+    // ── ハイライト位置更新 ───────────────────────────────
+    function updateHighlight() {
+        const w = outputWrapper.offsetWidth || 400;
+        const half = w / 2;
+        const col = activeSlot % 2;
+        const row = Math.floor(activeSlot / 2);
+        cellHighlight.style.left   = (col * half) + 'px';
+        cellHighlight.style.top    = (row * half) + 'px';
+        cellHighlight.style.width  = half + 'px';
+        cellHighlight.style.height = half + 'px';
+    }
+
+    window.addEventListener('resize', () => { updateHighlight(); });
+    // レイアウト確定後に実行
+    requestAnimationFrame(updateHighlight);
+
+    // ── outputCanvas クリックでスロット切替 ─────────────
+    outputCanvas.addEventListener('click', e => {
+        const rect = outputCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const col = x < rect.width  / 2 ? 0 : 1;
+        const row = y < rect.height / 2 ? 0 : 1;
+        setActiveSlot(row * 2 + col);
+    });
+
+    // ── スロット選択 ─────────────────────────────────────
+    slotBtns.forEach(btn => {
+        btn.addEventListener('click', () => setActiveSlot(parseInt(btn.dataset.slot)));
+    });
+
+    function setActiveSlot(i) {
+        activeSlot = i;
+        slotBtns.forEach((b, idx) => b.classList.toggle('active', idx === i));
+        updateHighlight();
+        updateDots();
+    }
+
+    // ── ドロップゾーン ────────────────────────────────────
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) loadToPalette(e.target.files[0]);
+        fileInput.value = '';
+    });
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (f && f.type.startsWith('image/')) loadToPalette(f);
+    });
+
+    function loadToPalette(file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = new Image();
+            img.onload = () => {
+                pal.img = img;
+                const pw = palCanvas.offsetWidth  || 300;
+                const ph = palCanvas.offsetHeight || 300;
+                pal.scale = Math.max(pw / img.width, ph / img.height);
+                pal.ox = (pw - img.width  * pal.scale) / 2;
+                pal.oy = (ph - img.height * pal.scale) / 2;
+                paletteEmpty.style.display = 'none';
+                paletteHint.style.display  = 'block';
+                setBtn.disabled = false;
+                resizePalCanvas();
+                drawPalette();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── パレットcanvasリサイズ ────────────────────────────
+    function resizePalCanvas() {
+        const rect = paletteWrapper.getBoundingClientRect();
+        palCanvas.width  = rect.width;
+        palCanvas.height = rect.height;
+    }
+
+    window.addEventListener('resize', () => {
+        if (pal.img) { resizePalCanvas(); drawPalette(); }
+    });
+
+    // ── パレット描画 ──────────────────────────────────────
+    function drawPalette() {
+        if (!pal.img) return;
+        const W = palCanvas.width, H = palCanvas.height;
+        palCtx.clearRect(0, 0, W, H);
+        palCtx.fillStyle = '#1a202c';
+        palCtx.fillRect(0, 0, W, H);
+
+        palCtx.drawImage(pal.img, pal.ox, pal.oy, pal.img.width * pal.scale, pal.img.height * pal.scale);
+
+        const size = Math.min(W, H) * 0.85;
+        const cx = (W - size) / 2, cy = (H - size) / 2;
+
+        palCtx.fillStyle = 'rgba(0,0,0,0.45)';
+        palCtx.fillRect(0, 0, W, cy);
+        palCtx.fillRect(0, cy + size, W, H - cy - size);
+        palCtx.fillRect(0, cy, cx, size);
+        palCtx.fillRect(cx + size, cy, W - cx - size, size);
+
+        palCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+        palCtx.lineWidth = 2;
+        palCtx.strokeRect(cx, cy, size, size);
+
+        palCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+        palCtx.lineWidth = 1;
+        for (let t = 1; t < 3; t++) {
+            palCtx.beginPath();
+            palCtx.moveTo(cx + size * t / 3, cy); palCtx.lineTo(cx + size * t / 3, cy + size); palCtx.stroke();
+            palCtx.beginPath();
+            palCtx.moveTo(cx, cy + size * t / 3); palCtx.lineTo(cx + size, cy + size * t / 3); palCtx.stroke();
+        }
+
+        const hs = 16;
+        palCtx.strokeStyle = 'white';
+        palCtx.lineWidth = 3;
+        [[cx,cy,1,1],[cx+size,cy,-1,1],[cx,cy+size,1,-1],[cx+size,cy+size,-1,-1]].forEach(([x,y,dx,dy]) => {
+            palCtx.beginPath();
+            palCtx.moveTo(x + dx*hs, y); palCtx.lineTo(x, y); palCtx.lineTo(x, y + dy*hs);
+            palCtx.stroke();
+        });
+    }
+
+    // ── ホイールズーム ────────────────────────────────────
+    paletteWrapper.addEventListener('wheel', e => {
+        e.preventDefault();
+        if (!pal.img) return;
+        const rect = palCanvas.getBoundingClientRect();
+        zoomAt(e.clientX - rect.left, e.clientY - rect.top, e.deltaY < 0 ? 1.1 : 0.9);
+    }, { passive: false });
+
+    function zoomAt(mx, my, factor) {
+        const ns = Math.max(0.1, Math.min(20, pal.scale * factor));
+        const sf = ns / pal.scale;
+        pal.ox = mx - sf * (mx - pal.ox);
+        pal.oy = my - sf * (my - pal.oy);
+        pal.scale = ns;
+        drawPalette();
+    }
+
+    // ── マウスドラッグ ────────────────────────────────────
+    paletteWrapper.addEventListener('mousedown', e => {
+        if (!pal.img) return;
+        pal.dragging = true;
+        pal.sx = e.clientX; pal.sy = e.clientY;
+        pal.sox = pal.ox;   pal.soy = pal.oy;
+        paletteWrapper.style.cursor = 'grabbing';
+    });
+    window.addEventListener('mousemove', e => {
+        if (!pal.dragging) return;
+        pal.ox = pal.sox + (e.clientX - pal.sx);
+        pal.oy = pal.soy + (e.clientY - pal.sy);
+        drawPalette();
+    });
+    window.addEventListener('mouseup', () => {
+        pal.dragging = false;
+        paletteWrapper.style.cursor = 'default';
+    });
+
+    // ── タッチ ────────────────────────────────────────────
+    paletteWrapper.addEventListener('touchstart', e => {
+        e.preventDefault();
+        if (!pal.img) return;
+        if (e.touches.length === 1) {
+            pal.dragging = true;
+            pal.sx = e.touches[0].clientX; pal.sy = e.touches[0].clientY;
+            pal.sox = pal.ox; pal.soy = pal.oy;
+        } else if (e.touches.length === 2) {
+            pal.dragging = false;
+            pal.lastDist = tDist(e.touches);
+        }
+    }, { passive: false });
+
+    paletteWrapper.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (!pal.img) return;
+        if (e.touches.length === 1 && pal.dragging) {
+            pal.ox = pal.sox + (e.touches[0].clientX - pal.sx);
+            pal.oy = pal.soy + (e.touches[0].clientY - pal.sy);
+            drawPalette();
+        } else if (e.touches.length === 2) {
+            const dist = tDist(e.touches);
+            const mid  = tMid(e.touches);
+            const rect = palCanvas.getBoundingClientRect();
+            zoomAt(mid.x - rect.left, mid.y - rect.top, dist / pal.lastDist);
+            pal.lastDist = dist;
+        }
+    }, { passive: false });
+
+    paletteWrapper.addEventListener('touchend', () => { pal.dragging = false; });
+
+    function tDist(t) { return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+    function tMid(t)  { return { x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2 }; }
+
+    // ── セットボタン ──────────────────────────────────────
+    setBtn.addEventListener('click', () => {
+        if (!pal.img) return;
+
+        // クロップしてImageに変換
+        const W = palCanvas.width, H = palCanvas.height;
+        const size = Math.min(W, H) * 0.85;
+        const cx = (W - size) / 2, cy = (H - size) / 2;
+        const imgX    = (cx - pal.ox) / pal.scale;
+        const imgY    = (cy - pal.oy) / pal.scale;
+        const imgSize = size / pal.scale;
+
+        const tmp = document.createElement('canvas');
+        tmp.width = tmp.height = CELL_PX;
+        tmp.getContext('2d').drawImage(pal.img, imgX, imgY, imgSize, imgSize, 0, 0, CELL_PX, CELL_PX);
+
+        const croppedImg = new Image();
+        croppedImg.onload = () => {
+            cellImgs[activeSlot] = croppedImg;
+            slotBtns[activeSlot].classList.add('filled');
+            redrawOutput();
+            updateDots();
+            updateStatus();
+
+            // 次の空きへ自動移動
+            const next = cellImgs.findIndex((v, i) => v === null && i !== activeSlot);
+            if (next !== -1) {
+                setActiveSlot(next);
+            } else if (cellImgs.every(v => v !== null)) {
+                onComplete();
+            }
+        };
+        croppedImg.src = tmp.toDataURL('image/png');
+    });
+
+    // ── 完成時 ────────────────────────────────────────────
+    function onComplete() {
+        const url = outputCanvas.toDataURL('image/png');
+
+        const resultSection    = document.getElementById('resultSection');
+        const resultImg        = document.getElementById('resultImg');
+        const resultSizeText   = document.getElementById('resultSizeText');
+        const finalDownloadBtn = document.getElementById('finalDownloadBtn');
+
+        resultImg.src = url;
+        resultSizeText.textContent = OUT + ' × ' + OUT + 'px';
+        resultSection.style.display = 'block';
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        const doDownload = () => {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'combined-grid-' + Date.now() + '.png';
+            a.click();
+        };
+        finalDownloadBtn.onclick = doDownload;
+
+
+    }
+
+    // ── ドット更新 ────────────────────────────────────────
+    function updateDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`dot${i}`);
+            dot.classList.remove('active', 'filled');
+            if (i === activeSlot) dot.classList.add('active');
+            else if (cellImgs[i]) dot.classList.add('filled');
+        }
+    }
+
+    // ── ステータス更新 ────────────────────────────────────
+    function updateStatus() {
+        const filled = cellImgs.filter(v => v !== null).length;
+        statusText.innerHTML = filled === 4
+            ? '<span class="badge ready">4枚結合完了！</span>'
+            : `${filled} / 4 枚セット済み`;
+    }
+
+    // ── 初期化 ────────────────────────────────────────────
+    resizePalCanvas();
+    updateStatus();
+    requestAnimationFrame(updateHighlight);
+})();
+</script>
 </body>
 </html>
