@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>画像結合ツール</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -12,611 +14,1036 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
-            background: #f6f8fb;
-            margin: 20px;
-            padding-bottom: 60px;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
             text-align: center;
+            margin-bottom: 40px;
         }
 
-        h2 {
-            margin-bottom: 16px;
+        h1 {
             color: #1a202c;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
-        h3 {
-            margin-bottom: 6px;
+        .subtitle {
+            color: #718096;
+            font-size: 1.1em;
         }
 
-        #dropZone {
-            width: 620px;
-            height: 160px;
-            margin: 0 auto 14px auto;
-            border: 3px dashed #6aa4ff;
-            background: #eef4ff;
+        .main-content {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .control-section {
+            margin-bottom: 24px;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 0.875em;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* スロット選択 */
+        .slot-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .slot-btn {
+            padding: 10px 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .slot-btn.active {
+            border-color: #4c51bf;
+            color: #4c51bf;
+            background: #ebf4ff;
+        }
+
+        .slot-btn.filled {
+            border-color: #38a169;
+            color: #2f855a;
+            background: #f0fff4;
+        }
+
+        .slot-btn.filled.active {
+            border-color: #4c51bf;
+            background: #ebf4ff;
+            color: #4c51bf;
+        }
+
+        /* パレット（クロップエリア） */
+        .palette-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            background: #1a202c;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: crosshair;
+            border: 2px solid #2d3748;
+        }
+
+        .palette-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .palette-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        /* クロップ枠 */
+        .crop-frame {
+            position: absolute;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+            pointer-events: none;
+        }
+
+        .crop-frame::before,
+        .crop-frame::after {
+            content: '';
+            position: absolute;
+            background: white;
+        }
+
+        /* パレット操作ヒント */
+        .palette-hint {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: rgba(255,255,255,0.85);
+            font-size: 0.7em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* パレット空状態 */
+        .palette-empty {
+            position: absolute;
+            inset: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            color: #718096;
+            pointer-events: none;
+        }
+
+        .palette-empty-icon {
+            font-size: 3em;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .palette-empty-text {
+            font-size: 0.85em;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        /* ドロップゾーン */
+        .drop-zone {
+            border: 2px dashed #cbd5e0;
             border-radius: 12px;
-            font-size: 18px;
+            padding: 28px 16px;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.2s ease;
             cursor: pointer;
-            transition: background 0.2s;
         }
 
-        #dropZone .sub {
-            font-size: 13px;
-            font-weight: normal;
-            color: #888;
-            margin-top: 6px;
+        .drop-zone:hover {
+            border-color: #4c51bf;
+            background: #edf2f7;
         }
 
-        #dropZone.dragover {
-            background: #dce9ff;
+        .drop-zone.drag-over {
+            background: #e6fffa;
+            border-color: #38b2ac;
+            transform: scale(1.02);
         }
 
-        #stockArea {
+        .drop-zone-icon {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-text {
+            color: #2d3748;
+            font-size: 0.95em;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .drop-zone-subtext {
+            color: #a0aec0;
+            font-size: 0.8em;
+        }
+
+        /* セット確定ボタン */
+        .set-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4c51bf;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+        }
+
+        .set-btn:hover:not(:disabled) {
+            background: #434190;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(76,81,191,0.3);
+        }
+
+        .set-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .info-card {
+            background: #edf2f7;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 4px;
+        }
+
+        .info-card h4 {
+            color: #2d3748;
+            font-size: 0.875em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-card ol {
+            color: #4a5568;
+            font-size: 0.875em;
+            line-height: 1.7;
+            padding-left: 20px;
+        }
+
+        .info-card li {
+            margin-bottom: 4px;
+        }
+
+        /* 右パネル */
+        .result-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .result-title {
+            color: #1a202c;
+            font-size: 1.25em;
+            font-weight: 700;
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            background: #4c51bf;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: none;
+        }
+
+        .download-btn:hover {
+            background: #434190;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(76,81,191,0.3);
+        }
+
+        /* 生成ボックス（2x2グリッド） */
+        .generation-box {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 4px;
+            aspect-ratio: 1;
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+        }
+
+        .grid-cell {
+            position: relative;
+            overflow: hidden;
+            background: #f7fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .grid-cell:hover {
+            filter: brightness(0.9);
+        }
+
+        .grid-cell.active-slot {
+            outline: 3px solid #4c51bf;
+            outline-offset: -3px;
+            z-index: 1;
+        }
+
+        .grid-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .grid-cell-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
+            gap: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .grid-cell-empty .slot-num {
+            font-size: 1.8em;
+            opacity: 0.4;
+            line-height: 1;
+        }
+
+        .grid-cell .clear-cell-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 22px;
+            height: 22px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .grid-cell:hover .clear-cell-btn {
+            opacity: 1;
+        }
+
+        .grid-cell .clear-cell-btn:hover {
+            background: rgba(220,38,38,0.9);
+        }
+
+        .grid-status {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 12px;
+            color: #718096;
+            font-size: 0.875em;
         }
 
-        .stockThumb {
-            width: 70px;
-            height: 70px;
-            border-radius: 8px;
-            border: 2px solid #bbb;
-            object-fit: cover;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .stockThumb:hover {
-            border-color: #6aa4ff;
-        }
-
-        canvas {
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            background: white;
-        }
-
-        #board {
-            border: 5px solid #444;
-        }
-
-        #layout {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .panelHeader {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 0 auto 6px auto;
-        }
-
-        .panelHeader.wide {
-            width: 600px;
-        }
-
-        button {
-            margin: 5px;
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: none;
-            background: #6aa4ff;
-            color: white;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #558ae0;
-        }
-
-        .direction-toggle {
-            display: inline-flex;
-            background: #e2e8f0;
-            border-radius: 8px;
-            padding: 3px;
-            gap: 3px;
-            margin-bottom: 10px;
-        }
-
-        .direction-btn {
-            padding: 7px 16px;
-            border-radius: 6px;
-            border: none;
-            background: transparent;
-            color: #555;
-            cursor: pointer;
-            font-size: 13px;
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #edf2f7;
+            border-radius: 12px;
             font-weight: 600;
-            transition: all 0.2s;
-            margin: 0;
+            color: #4a5568;
         }
 
-        .direction-btn.active {
-            background: white;
-            color: #4c51bf;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        .badge.ready {
+            background: #c6f6d5;
+            color: #276749;
         }
 
-        .slot-indicator {
+        .result-info {
+            margin-top: 12px;
+            color: #718096;
+            font-size: 0.875em;
             display: flex;
-            gap: 6px;
+            align-items: center;
             justify-content: center;
-            margin-bottom: 6px;
+            gap: 8px;
         }
 
-        .slot-dot {
+        /* 結合結果画像 */
+        .result-image-section {
+            display: none;
+        }
+
+        .result-image-section.visible {
+            display: block;
+        }
+
+        .combined-image-container {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .combined-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        /* プログレスドット */
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .progress-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #cbd5e0;
-            transition: background 0.2s;
+            background: #e2e8f0;
+            transition: background 0.3s;
         }
 
-        .slot-dot.filled {
-            background: #6aa4ff;
+        .progress-dot.filled {
+            background: #4c51bf;
         }
 
-        #resultImg {
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            background: white;
-            display: block;
+        .progress-dot.active {
+            background: #4c51bf;
+            box-shadow: 0 0 0 3px rgba(76,81,191,0.25);
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>
+                <span>🎨</span>
+                画像結合ツール
+            </h1>
+            <p class="subtitle">4枚の画像を正方形グリッドに結合</p>
+        </header>
 
-<h2>🎨 画像結合ツール</h2>
+        <div class="main-content">
+            <aside class="sidebar">
+                <!-- スロット選択 -->
+                <div class="control-section">
+                    <label class="control-label">セル選択</label>
+                    <div class="slot-selector">
+                        <button class="slot-btn active" data-slot="0">① 左上</button>
+                        <button class="slot-btn" data-slot="1">② 右上</button>
+                        <button class="slot-btn" data-slot="2">③ 左下</button>
+                        <button class="slot-btn" data-slot="3">④ 右下</button>
+                    </div>
+                </div>
 
-<div style="width:630px;margin:0 auto 10px auto">
-    <div id="dropZone">
-        📸 画像をドロップ
-        <span class="sub">またはクリックして選択（複数可）</span>
-    </div>
-    <div id="stockArea"></div>
-</div>
+                <!-- 画像追加 -->
+                <div class="control-section">
+                    <label class="control-label">画像を追加</label>
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-icon">📸</div>
+                        <div class="drop-zone-text">ドラッグ&ドロップ</div>
+                        <div class="drop-zone-subtext">またはクリックして選択</div>
+                    </div>
+                </div>
 
-<div id="layout">
+                <!-- パレット（クロップ・拡縮エリア） -->
+                <div class="control-section">
+                    <label class="control-label">パレット（拡縮・切り抜き）</label>
+                    <div class="palette-wrapper" id="paletteWrapper">
+                        <canvas class="palette-canvas" id="paletteCanvas"></canvas>
+                        <div class="crop-frame" id="cropFrame" style="display:none;"></div>
+                        <div class="palette-empty" id="paletteEmpty">
+                            <div class="palette-empty-icon">🖼️</div>
+                            <div class="palette-empty-text">画像を追加してください<br>ホイール／ピンチで拡縮<br>ドラッグで移動</div>
+                        </div>
+                        <div class="palette-hint" id="paletteHint" style="display:none;">スクロール：拡縮 ／ ドラッグ：移動</div>
+                    </div>
+                    <button class="set-btn" id="setBtn" disabled>✂️ 切り抜いてセルにセット</button>
+                </div>
 
-    <!-- 調整エリア -->
-    <div>
-        <h3>調整エリア</h3>
-        <canvas id="editor" width="300" height="300"></canvas>
-        <br>
-        <button id="addBtn">スロットに追加 →</button>
-        <button id="whiteBgBtn">白背景を付与</button>
-    </div>
+                <div class="info-card">
+                    <h4>📋 使い方</h4>
+                    <ol>
+                        <li>セルを選択（①〜④）</li>
+                        <li>画像をドロップして追加</li>
+                        <li>パレットで拡縮・位置調整</li>
+                        <li>「セット」ボタンで確定</li>
+                        <li>4枚揃ったらダウンロード</li>
+                    </ol>
+                </div>
+            </aside>
 
-    <!-- 合成キャンバス -->
-    <div>
-        <div class="panelHeader" style="width:300px;flex-direction:column;align-items:center;">
-            <h3>合成キャンバス</h3>
-            <div class="direction-toggle">
-                <button class="direction-btn active" data-dir="horizontal">↔ 横並び</button>
-                <button class="direction-btn" data-dir="vertical">↕ 縦並び</button>
-            </div>
-            <div class="slot-indicator">
-                <div class="slot-dot" id="dot0"></div>
-                <div class="slot-dot" id="dot1"></div>
-            </div>
+            <main class="result-panel">
+                <div class="result-header">
+                    <h2 class="result-title">生成ボックス</h2>
+                    <button class="download-btn" id="downloadBtn">💾 ダウンロード</button>
+                </div>
+
+                <!-- 2x2グリッド -->
+                <div class="generation-box">
+                    <div class="grid-2x2" id="grid2x2">
+                        <div class="grid-cell active-slot" data-cell="0" id="cell0">
+                            <div class="grid-cell-empty"><span class="slot-num">①</span><span>左上</span></div>
+                        </div>
+                        <div class="grid-cell" data-cell="1" id="cell1">
+                            <div class="grid-cell-empty"><span class="slot-num">②</span><span>右上</span></div>
+                        </div>
+                        <div class="grid-cell" data-cell="2" id="cell2">
+                            <div class="grid-cell-empty"><span class="slot-num">③</span><span>左下</span></div>
+                        </div>
+                        <div class="grid-cell" data-cell="3" id="cell3">
+                            <div class="grid-cell-empty"><span class="slot-num">④</span><span>右下</span></div>
+                        </div>
+                    </div>
+
+                    <div class="progress-dots">
+                        <div class="progress-dot active" id="dot0"></div>
+                        <div class="progress-dot" id="dot1"></div>
+                        <div class="progress-dot" id="dot2"></div>
+                        <div class="progress-dot" id="dot3"></div>
+                    </div>
+
+                    <div class="grid-status">
+                        <span id="statusText">セルを選んで画像をセットしてください</span>
+                    </div>
+                </div>
+
+                <!-- 結合結果 -->
+                <div class="result-image-section" id="resultImageSection">
+                    <hr style="margin: 28px 0; border-color: #e2e8f0;">
+                    <div class="combined-image-container">
+                        <img class="combined-image" id="combinedImage" src="" alt="結合画像">
+                        <div class="result-info">
+                            <span class="badge ready">4枚結合完了</span>
+                            <span id="resultSize"></span>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
-        <div style="position:relative">
-            <canvas id="board" width="300" height="600"></canvas>
-        </div>
-        <button id="clearBtn" style="background:#e57373">全クリア</button>
-        <button id="deleteBtn" style="display:none;background:#e57373">選択を削除</button>
     </div>
 
-    <!-- 完成画像 -->
-    <div>
-        <div class="panelHeader" style="width:300px;flex-direction:column;align-items:center;">
-            <h3>完成画像</h3>
-            <div>
-                <button id="resultWhiteBgBtn">白背景を付与</button>
-                <button id="downloadBtn">💾 保存</button>
-            </div>
-        </div>
-        <br>
-        <img id="resultImg" width="300" height="600" draggable="true" />
-    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
 
-</div>
+    <script>
+    (() => {
+        // ── State ──────────────────────────────────────────────
+        const CELL_COUNT = 4;
+        const CELL_SIZE = 600; // 出力1セルのpxサイズ
 
-<input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+        let activeSlot = 0;
+        let cellImages = [null, null, null, null]; // DataURL per cell
 
-<script>
-const dropZone = document.getElementById("dropZone");
-const fileInput = document.getElementById("fileInput");
-const stockArea = document.getElementById("stockArea");
-const editor = document.getElementById("editor");
-const ectx = editor.getContext("2d");
-const board = document.getElementById("board");
-const bctx = board.getContext("2d");
-const resultImg = document.getElementById("resultImg");
-const deleteBtn = document.getElementById("deleteBtn");
-
-let editingImage = null;
-let crop = null;
-let scale = 1;
-let stockImages = [];
-let boardImages = [null, null]; // 2スロット
-let selectedIndex = null;
-let resultWhiteBg = false;
-let dragStartIndex = null;
-let dragging = false;
-let lastX = 0, lastY = 0;
-let direction = "horizontal"; // horizontal or vertical
-
-// ===== 方向切り替え =====
-const directionBtns = document.querySelectorAll(".direction-btn");
-directionBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-        directionBtns.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        direction = btn.dataset.dir;
-        updateBoardSize();
-        drawBoard();
-    });
-});
-
-function updateBoardSize() {
-    if (direction === "horizontal") {
-        board.width = 600;
-        board.height = 300;
-        resultImg.width = 600;
-        resultImg.height = 300;
-    } else {
-        board.width = 300;
-        board.height = 600;
-        resultImg.width = 300;
-        resultImg.height = 600;
-    }
-}
-
-// ===== ストック =====
-function updateStockUI() {
-    stockArea.innerHTML = "";
-    stockImages.forEach(img => {
-        const el = document.createElement("img");
-        el.src = img.src;
-        el.className = "stockThumb";
-        el.onclick = () => {
-            editingImage = img;
-            crop = initCrop(img);
-            scale = 1;
-            drawEditor();
+        // パレット状態
+        let palette = {
+            img: null,
+            scale: 1,
+            offsetX: 0,
+            offsetY: 0,
+            isDragging: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragOffsetX: 0,
+            dragOffsetY: 0,
+            // タッチピンチ
+            lastTouchDist: 0,
+            lastTouchMidX: 0,
+            lastTouchMidY: 0,
         };
-        stockArea.appendChild(el);
-    });
-}
 
-// ===== エディタ =====
-function drawEditor() {
-    if (!editingImage) return;
-    ectx.clearRect(0, 0, 300, 300);
-    const size = crop.size / scale;
-    ectx.drawImage(editingImage, crop.x, crop.y, size, size, 0, 0, 300, 300);
-}
+        // ── DOM refs ──────────────────────────────────────────
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const paletteWrapper = document.getElementById('paletteWrapper');
+        const paletteCanvas = document.getElementById('paletteCanvas');
+        const paletteEmpty = document.getElementById('paletteEmpty');
+        const paletteHint = document.getElementById('paletteHint');
+        const cropFrame = document.getElementById('cropFrame');
+        const setBtn = document.getElementById('setBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const grid = document.getElementById('grid2x2');
+        const statusText = document.getElementById('statusText');
+        const resultImageSection = document.getElementById('resultImageSection');
+        const combinedImage = document.getElementById('combinedImage');
+        const resultSize = document.getElementById('resultSize');
+        const slotBtns = document.querySelectorAll('.slot-btn');
 
-function initCrop(img) {
-    const size = Math.min(img.width, img.height);
-    return { x: (img.width - size) / 2, y: (img.height - size) / 2, size };
-}
+        const ctx = paletteCanvas.getContext('2d');
 
-function clampCrop() {
-    const size = crop.size / scale;
-    crop.x = Math.max(0, Math.min(crop.x, editingImage.width - size));
-    crop.y = Math.max(0, Math.min(crop.y, editingImage.height - size));
-}
+        // ── スロット選択 ──────────────────────────────────────
+        slotBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setActiveSlot(parseInt(btn.dataset.slot));
+            });
+        });
 
-editor.addEventListener("pointerdown", e => {
-    editor.setPointerCapture(e.pointerId);
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-});
-
-window.addEventListener("pointermove", e => {
-    if (!dragging || !editingImage) return;
-    const size = crop.size / scale;
-    crop.x -= (e.clientX - lastX) * (size / 300);
-    crop.y -= (e.clientY - lastY) * (size / 300);
-    clampCrop();
-    lastX = e.clientX;
-    lastY = e.clientY;
-    drawEditor();
-});
-
-window.addEventListener("pointerup", () => dragging = false);
-
-editor.addEventListener("wheel", e => {
-    if (!editingImage) return;
-    e.preventDefault();
-    scale += e.deltaY * -0.001;
-    scale = Math.min(Math.max(1, scale), 12);
-    clampCrop();
-    drawEditor();
-}, { passive: false });
-
-// 白背景付与（エディタ）
-document.getElementById("whiteBgBtn").onclick = () => {
-    if (!editingImage) return;
-    const temp = document.createElement("canvas");
-    temp.width = editingImage.width;
-    temp.height = editingImage.height;
-    const ctx = temp.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, temp.width, temp.height);
-    ctx.drawImage(editingImage, 0, 0);
-    const img = new Image();
-    img.src = temp.toDataURL();
-    img.onload = () => { editingImage = img; drawEditor(); };
-};
-
-// ===== ドロップ / ファイル選択 =====
-dropZone.addEventListener("click", () => fileInput.click());
-
-fileInput.addEventListener("change", e => {
-    handleFiles(e.target.files);
-    fileInput.value = "";
-});
-
-dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-});
-
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-
-dropZone.addEventListener("drop", e => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-    handleFiles(e.dataTransfer.files);
-});
-
-function handleFiles(files) {
-    [...files].filter(f => f.type.startsWith("image/")).forEach(file => {
-        const r = new FileReader();
-        r.onload = ev => {
-            const img = new Image();
-            img.onload = () => {
-                stockImages.push(img);
-                updateStockUI();
-                // 最初の画像は自動でエディタへ
-                if (!editingImage) {
-                    editingImage = img;
-                    crop = initCrop(img);
-                    scale = 1;
-                    drawEditor();
-                }
-            };
-            img.src = ev.target.result;
-        };
-        r.readAsDataURL(file);
-    });
-}
-
-// ===== スロット追加 =====
-document.getElementById("addBtn").onclick = () => {
-    if (!editingImage) return;
-    const slot = boardImages.findIndex(x => x === null);
-    if (slot === -1) return;
-
-    const temp = document.createElement("canvas");
-    temp.width = 300;
-    temp.height = 300;
-    const tctx = temp.getContext("2d");
-    const size = crop.size / scale;
-    tctx.drawImage(editingImage, crop.x, crop.y, size, size, 0, 0, 300, 300);
-
-    const img = new Image();
-    img.src = temp.toDataURL();
-    img.onload = () => {
-        boardImages[slot] = img;
-        updateDots();
-        drawBoard();
-    };
-};
-
-// ===== ドット表示 =====
-function updateDots() {
-    boardImages.forEach((img, i) => {
-        const dot = document.getElementById("dot" + i);
-        if (dot) dot.className = "slot-dot" + (img ? " filled" : "");
-    });
-}
-
-// ===== ボード描画 =====
-function drawBoard() {
-    bctx.clearRect(0, 0, board.width, board.height);
-
-    boardImages.forEach((img, i) => {
-        if (!img) return;
-        let dx, dy;
-        if (direction === "horizontal") {
-            dx = i * 300;
-            dy = 0;
-        } else {
-            dx = 0;
-            dy = i * 300;
+        // グリッドセルをクリックしてスロット切替
+        for (let i = 0; i < CELL_COUNT; i++) {
+            const cell = document.getElementById(`cell${i}`);
+            cell.addEventListener('click', (e) => {
+                if (e.target.classList.contains('clear-cell-btn')) return;
+                setActiveSlot(i);
+            });
         }
-        bctx.drawImage(img, dx, dy, 300, 300);
-    });
 
-    // グリッド線
-    bctx.save();
-    bctx.strokeStyle = "rgba(100,164,255,0.4)";
-    bctx.lineWidth = 2;
-    bctx.setLineDash([6, 4]);
+        function setActiveSlot(i) {
+            activeSlot = i;
+            slotBtns.forEach((b, idx) => {
+                b.classList.toggle('active', idx === i);
+            });
+            // グリッドセルのハイライト
+            for (let j = 0; j < CELL_COUNT; j++) {
+                document.getElementById(`cell${j}`).classList.toggle('active-slot', j === i);
+            }
+            // ドットアニメーション
+            updateDots();
+        }
 
-    if (direction === "horizontal") {
-        // 縦線1本（中央）
-        bctx.beginPath();
-        bctx.moveTo(300, 0);
-        bctx.lineTo(300, 300);
-        bctx.stroke();
-        // 空スロット表示
-        boardImages.forEach((img, i) => {
-            if (!img) {
-                const dx = i * 300;
-                bctx.fillStyle = "rgba(200,220,255,0.25)";
-                bctx.fillRect(dx, 0, 300, 300);
-                bctx.fillStyle = "#aac4ff";
-                bctx.font = "16px sans-serif";
-                bctx.textAlign = "center";
-                bctx.fillText(`スロット ${i + 1}`, dx + 150, 155);
+        // ── ドロップゾーン ────────────────────────────────────
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            if (e.target.files[0]) loadImageToPalette(e.target.files[0]);
+            fileInput.value = '';
+        });
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const f = e.dataTransfer.files[0];
+            if (f && f.type.startsWith('image/')) loadImageToPalette(f);
+        });
+
+        function loadImageToPalette(file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    palette.img = img;
+                    // 初期スケール：パレットに収まるように
+                    const pw = paletteCanvas.offsetWidth || 300;
+                    const ph = paletteCanvas.offsetHeight || 300;
+                    const scaleW = pw / img.width;
+                    const scaleH = ph / img.height;
+                    palette.scale = Math.max(scaleW, scaleH);
+                    // センタリング
+                    palette.offsetX = (pw - img.width * palette.scale) / 2;
+                    palette.offsetY = (ph - img.height * palette.scale) / 2;
+
+                    paletteEmpty.style.display = 'none';
+                    paletteHint.style.display = 'block';
+                    setBtn.disabled = false;
+                    resizePaletteCanvas();
+                    drawPalette();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ── Canvas リサイズ ───────────────────────────────────
+        function resizePaletteCanvas() {
+            const rect = paletteWrapper.getBoundingClientRect();
+            paletteCanvas.width = rect.width;
+            paletteCanvas.height = rect.height;
+        }
+
+        window.addEventListener('resize', () => {
+            if (palette.img) {
+                resizePaletteCanvas();
+                drawPalette();
             }
         });
-    } else {
-        // 横線1本（中央）
-        bctx.beginPath();
-        bctx.moveTo(0, 300);
-        bctx.lineTo(300, 300);
-        bctx.stroke();
-        boardImages.forEach((img, i) => {
-            if (!img) {
-                const dy = i * 300;
-                bctx.fillStyle = "rgba(200,220,255,0.25)";
-                bctx.fillRect(0, dy, 300, 300);
-                bctx.fillStyle = "#aac4ff";
-                bctx.font = "16px sans-serif";
-                bctx.textAlign = "center";
-                bctx.fillText(`スロット ${i + 1}`, 150, dy + 155);
+
+        // ── パレット描画 ──────────────────────────────────────
+        function drawPalette() {
+            if (!palette.img) return;
+            const W = paletteCanvas.width;
+            const H = paletteCanvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // 背景
+            ctx.fillStyle = '#1a202c';
+            ctx.fillRect(0, 0, W, H);
+
+            // 画像
+            ctx.drawImage(
+                palette.img,
+                palette.offsetX, palette.offsetY,
+                palette.img.width * palette.scale,
+                palette.img.height * palette.scale
+            );
+
+            // クロップ枠（正方形、中央）
+            const size = Math.min(W, H) * 0.85;
+            const cx = (W - size) / 2;
+            const cy = (H - size) / 2;
+
+            // オーバーレイ（暗い部分）
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            // 上
+            ctx.fillRect(0, 0, W, cy);
+            // 下
+            ctx.fillRect(0, cy + size, W, H - cy - size);
+            // 左
+            ctx.fillRect(0, cy, cx, size);
+            // 右
+            ctx.fillRect(cx + size, cy, W - cx - size, size);
+
+            // 枠線
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx, cy, size, size);
+
+            // グリッド補助線
+            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.lineWidth = 1;
+            for (let t = 1; t < 3; t++) {
+                ctx.beginPath();
+                ctx.moveTo(cx + size * t / 3, cy);
+                ctx.lineTo(cx + size * t / 3, cy + size);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + size * t / 3);
+                ctx.lineTo(cx + size, cy + size * t / 3);
+                ctx.stroke();
             }
+
+            // コーナーハンドル
+            const hs = 16;
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            const corners = [
+                [cx, cy, 1, 1], [cx + size, cy, -1, 1],
+                [cx, cy + size, 1, -1], [cx + size, cy + size, -1, -1]
+            ];
+            corners.forEach(([x, y, dx, dy]) => {
+                ctx.beginPath();
+                ctx.moveTo(x + dx * hs, y);
+                ctx.lineTo(x, y);
+                ctx.lineTo(x, y + dy * hs);
+                ctx.stroke();
+            });
+        }
+
+        // ── ホイールズーム ────────────────────────────────────
+        paletteWrapper.addEventListener('wheel', e => {
+            e.preventDefault();
+            if (!palette.img) return;
+            const rect = paletteCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            zoomAt(mx, my, e.deltaY < 0 ? 1.1 : 0.9);
+        }, { passive: false });
+
+        function zoomAt(mx, my, factor) {
+            const newScale = Math.max(0.1, Math.min(20, palette.scale * factor));
+            const sf = newScale / palette.scale;
+            palette.offsetX = mx - sf * (mx - palette.offsetX);
+            palette.offsetY = my - sf * (my - palette.offsetY);
+            palette.scale = newScale;
+            drawPalette();
+        }
+
+        // ── マウスドラッグ ────────────────────────────────────
+        paletteWrapper.addEventListener('mousedown', e => {
+            if (!palette.img) return;
+            palette.isDragging = true;
+            palette.dragStartX = e.clientX;
+            palette.dragStartY = e.clientY;
+            palette.dragOffsetX = palette.offsetX;
+            palette.dragOffsetY = palette.offsetY;
+            paletteWrapper.style.cursor = 'grabbing';
         });
-    }
 
-    bctx.restore();
+        window.addEventListener('mousemove', e => {
+            if (!palette.isDragging) return;
+            palette.offsetX = palette.dragOffsetX + (e.clientX - palette.dragStartX);
+            palette.offsetY = palette.dragOffsetY + (e.clientY - palette.dragStartY);
+            drawPalette();
+        });
 
-    drawResult();
-}
+        window.addEventListener('mouseup', () => {
+            palette.isDragging = false;
+            paletteWrapper.style.cursor = 'default';
+        });
 
-// ===== ボードクリック（選択・削除） =====
-board.addEventListener("click", e => {
-    const rect = board.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (board.width / rect.width);
-    const y = (e.clientY - rect.top) * (board.height / rect.height);
+        // ── タッチ操作 ────────────────────────────────────────
+        paletteWrapper.addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (!palette.img) return;
+            if (e.touches.length === 1) {
+                palette.isDragging = true;
+                palette.dragStartX = e.touches[0].clientX;
+                palette.dragStartY = e.touches[0].clientY;
+                palette.dragOffsetX = palette.offsetX;
+                palette.dragOffsetY = palette.offsetY;
+            } else if (e.touches.length === 2) {
+                palette.isDragging = false;
+                palette.lastTouchDist = getTouchDist(e.touches);
+                const mid = getTouchMid(e.touches);
+                palette.lastTouchMidX = mid.x;
+                palette.lastTouchMidY = mid.y;
+            }
+        }, { passive: false });
 
-    let index;
-    if (direction === "horizontal") {
-        index = Math.floor(x / 300);
-    } else {
-        index = Math.floor(y / 300);
-    }
+        paletteWrapper.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (!palette.img) return;
+            if (e.touches.length === 1 && palette.isDragging) {
+                palette.offsetX = palette.dragOffsetX + (e.touches[0].clientX - palette.dragStartX);
+                palette.offsetY = palette.dragOffsetY + (e.touches[0].clientY - palette.dragStartY);
+                drawPalette();
+            } else if (e.touches.length === 2) {
+                const dist = getTouchDist(e.touches);
+                const mid = getTouchMid(e.touches);
+                const factor = dist / palette.lastTouchDist;
+                const rect = paletteCanvas.getBoundingClientRect();
+                zoomAt(mid.x - rect.left, mid.y - rect.top, factor);
+                palette.lastTouchDist = dist;
+                palette.lastTouchMidX = mid.x;
+                palette.lastTouchMidY = mid.y;
+            }
+        }, { passive: false });
 
-    index = Math.min(index, 1);
+        paletteWrapper.addEventListener('touchend', () => {
+            palette.isDragging = false;
+        });
 
-    if (!boardImages[index]) return;
+        function getTouchDist(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
 
-    selectedIndex = index;
-    deleteBtn.style.display = "inline-block";
-});
+        function getTouchMid(touches) {
+            return {
+                x: (touches[0].clientX + touches[1].clientX) / 2,
+                y: (touches[0].clientY + touches[1].clientY) / 2,
+            };
+        }
 
-// ===== ドラッグで入れ替え =====
-board.addEventListener("pointerdown", e => {
-    const rect = board.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (board.width / rect.width);
-    const y = (e.clientY - rect.top) * (board.height / rect.height);
-    const index = direction === "horizontal" ? Math.floor(x / 300) : Math.floor(y / 300);
-    if (boardImages[Math.min(index, 1)]) dragStartIndex = Math.min(index, 1);
-});
+        // ── セットボタン ──────────────────────────────────────
+        setBtn.addEventListener('click', () => {
+            if (!palette.img) return;
+            const cropDataUrl = getCroppedDataUrl();
+            cellImages[activeSlot] = cropDataUrl;
+            updateCell(activeSlot, cropDataUrl);
+            updateDots();
+            updateStatus();
 
-board.addEventListener("pointerup", e => {
-    if (dragStartIndex === null) return;
-    const rect = board.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (board.width / rect.width);
-    const y = (e.clientY - rect.top) * (board.height / rect.height);
-    const drop = Math.min(direction === "horizontal" ? Math.floor(x / 300) : Math.floor(y / 300), 1);
+            // 次の空きセルへ自動移動
+            const next = cellImages.findIndex((v, i) => v === null && i !== activeSlot);
+            if (next !== -1) setActiveSlot(next);
+            else if (cellImages.every(v => v !== null)) combineAll();
+        });
 
-    if (drop !== dragStartIndex) {
-        [boardImages[dragStartIndex], boardImages[drop]] = [boardImages[drop], boardImages[dragStartIndex]];
-        updateDots();
-        drawBoard();
-    }
-    dragStartIndex = null;
-});
+        // ── クロップ取得 ──────────────────────────────────────
+        function getCroppedDataUrl() {
+            const W = paletteCanvas.width;
+            const H = paletteCanvas.height;
+            const size = Math.min(W, H) * 0.85;
+            const cx = (W - size) / 2;
+            const cy = (H - size) / 2;
 
-// ===== 削除 =====
-deleteBtn.onclick = () => {
-    if (selectedIndex === null) return;
-    boardImages[selectedIndex] = null;
-    selectedIndex = null;
-    deleteBtn.style.display = "none";
-    updateDots();
-    drawBoard();
-};
+            // 実際の画像座標
+            const imgX = (cx - palette.offsetX) / palette.scale;
+            const imgY = (cy - palette.offsetY) / palette.scale;
+            const imgSize = size / palette.scale;
 
-// ===== 全クリア =====
-document.getElementById("clearBtn").onclick = () => {
-    boardImages = [null, null];
-    selectedIndex = null;
-    deleteBtn.style.display = "none";
-    updateDots();
-    drawBoard();
-};
+            const out = document.createElement('canvas');
+            out.width = CELL_SIZE;
+            out.height = CELL_SIZE;
+            const octx = out.getContext('2d');
+            octx.drawImage(palette.img, imgX, imgY, imgSize, imgSize, 0, 0, CELL_SIZE, CELL_SIZE);
+            return out.toDataURL('image/png');
+        }
 
-// ===== 完成画像 =====
-function drawResult() {
-    const w = direction === "horizontal" ? 600 : 300;
-    const h = direction === "horizontal" ? 300 : 600;
+        // ── セル更新 ──────────────────────────────────────────
+        function updateCell(i, dataUrl) {
+            const cell = document.getElementById(`cell${i}`);
+            cell.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            cell.appendChild(img);
 
-    const temp = document.createElement("canvas");
-    temp.width = w;
-    temp.height = h;
-    const ctx = temp.getContext("2d");
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'clear-cell-btn';
+            clearBtn.innerHTML = '×';
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearCell(i);
+            });
+            cell.appendChild(clearBtn);
 
-    if (resultWhiteBg) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, w, h);
-    }
+            // スロットボタンを「済」表示
+            slotBtns[i].classList.add('filled');
+        }
 
-    boardImages.forEach((img, i) => {
-        if (!img) return;
-        const dx = direction === "horizontal" ? i * 300 : 0;
-        const dy = direction === "horizontal" ? 0 : i * 300;
-        ctx.drawImage(img, dx, dy, 300, 300);
-    });
+        function clearCell(i) {
+            cellImages[i] = null;
+            const cell = document.getElementById(`cell${i}`);
+            const labels = ['①左上','②右上','③左下','④右下'];
+            const nums = ['①','②','③','④'];
+            const texts = ['左上','右上','左下','右下'];
+            cell.innerHTML = `<div class="grid-cell-empty"><span class="slot-num">${nums[i]}</span><span>${texts[i]}</span></div>`;
+            slotBtns[i].classList.remove('filled');
+            setActiveSlot(i);
+            updateDots();
+            updateStatus();
+            resultImageSection.classList.remove('visible');
+            downloadBtn.style.display = 'none';
+        }
 
-    resultImg.src = temp.toDataURL();
-    resultImg.width = w;
-    resultImg.height = h;
-}
+        // ── ドット更新 ────────────────────────────────────────
+        function updateDots() {
+            for (let i = 0; i < CELL_COUNT; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                dot.classList.remove('active', 'filled');
+                if (i === activeSlot) dot.classList.add('active');
+                else if (cellImages[i]) dot.classList.add('filled');
+            }
+        }
 
-document.getElementById("resultWhiteBgBtn").onclick = () => {
-    resultWhiteBg = !resultWhiteBg;
-    document.getElementById("resultWhiteBgBtn").textContent = resultWhiteBg ? "白背景を解除" : "白背景を付与";
-    drawResult();
-};
+        // ── ステータス更新 ────────────────────────────────────
+        function updateStatus() {
+            const filled = cellImages.filter(v => v !== null).length;
+            if (filled === 4) {
+                statusText.innerHTML = '<span class="badge ready">4枚揃いました！</span>';
+            } else {
+                statusText.textContent = `${filled} / 4 枚セット済み`;
+            }
+        }
 
-// ===== ダウンロード =====
-document.getElementById("downloadBtn").onclick = () => {
-    const link = document.createElement("a");
-    link.href = resultImg.src;
-    link.download = `combined-${direction}-${Date.now()}.png`;
-    link.click();
-};
+        // ── 全結合 ────────────────────────────────────────────
+        function combineAll() {
+            const S = CELL_SIZE;
+            const out = document.createElement('canvas');
+            out.width = S * 2;
+            out.height = S * 2;
+            const octx = out.getContext('2d');
 
-// ドラッグ保存
-resultImg.addEventListener("dragstart", e => {
-    e.dataTransfer.setData("DownloadURL", `image/png:combined.png:${resultImg.src}`);
-});
+            const positions = [[0,0],[S,0],[0,S],[S,S]];
+            let loaded = 0;
+            cellImages.forEach((dataUrl, i) => {
+                const img = new Image();
+                img.onload = () => {
+                    octx.drawImage(img, positions[i][0], positions[i][1], S, S);
+                    loaded++;
+                    if (loaded === 4) {
+                        const url = out.toDataURL('image/png');
+                        combinedImage.src = url;
+                        resultSize.textContent = `${S * 2} × ${S * 2}px`;
+                        resultImageSection.classList.add('visible');
+                        downloadBtn.style.display = 'block';
+                        downloadBtn.onclick = () => {
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `combined-grid-${Date.now()}.png`;
+                            a.click();
+                        };
+                    }
+                };
+                img.src = dataUrl;
+            });
+        }
 
-// 初期描画
-updateBoardSize();
-drawBoard();
-</script>
+        // ── 初期化 ────────────────────────────────────────────
+        resizePaletteCanvas();
+        updateStatus();
+    })();
+    </script>
 </body>
 </html>
