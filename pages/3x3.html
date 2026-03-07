@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9タイル画像結合ツール</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;600;700&display=swap');
+
+:root {
+  --bg: #0d0e14;
+  --surface: #14161f;
+  --surface2: #1c1f2e;
+  --border: #2a2d3e;
+  --accent: #6af7c8;
+  --accent2: #6ab4f7;
+  --text: #e8eaf6;
+  --muted: #5c607a;
+  --cell-filled: #1a3a2e;
+  --cell-active: #1a2a40;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+}
+
+.logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.25em;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.header-meta { color: var(--muted); font-size: 0.85em; }
+
+.header-status {
+  margin-left: auto;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8em;
+  color: var(--accent);
+  background: rgba(106,247,200,0.08);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(106,247,200,0.2);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: calc(100vh - 65px);
+  overflow: hidden;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7em;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+.section-title:first-child { margin-top: 0; }
+
+.cell-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 6px;
+}
+
+.cell-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 50px;
+}
+
+.cell-coord { color: var(--muted); font-size: 0.8em; line-height: 1.4; }
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 22px 16px;
+  text-align: center;
+  background: var(--surface2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(106,247,200,0.06);
+}
+.drop-zone-icon { font-size: 2em; margin-bottom: 6px; }
+.drop-zone-text { font-size: 0.9em; font-weight: 600; color: var(--text); }
+.drop-zone-sub  { font-size: 0.75em; color: var(--muted); margin-top: 2px; }
+
+.palette-wrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: grab;
+  position: relative;
+  border: 1px solid var(--border);
+}
+.palette-wrapper:active { cursor: grabbing; }
+.palette-canvas { width:100%; height:100%; display:block; }
+.palette-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--muted); pointer-events: none;
+}
+.palette-empty-icon { font-size:2.5em; margin-bottom:8px; opacity:0.4; }
+.palette-empty-text { font-size:0.78em; opacity:0.6; text-align:center; line-height:1.6; }
+
+.set-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0d0e14;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+.set-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(106,247,200,0.35);
+}
+.set-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+.clear-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 6px;
+}
+.clear-btn:hover { border-color: #e57373; color: #e57373; }
+
+.info-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+.info-box ol { color: var(--muted); font-size: 0.8em; line-height: 1.9; padding-left: 18px; }
+
+/* ─── MAIN ─── */
+.main-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.toolbar-label { font-family: 'Space Mono', monospace; font-size: 0.75em; color: var(--muted); }
+
+.batch-btns { display: flex; gap: 6px; margin-left: auto; }
+
+.tool-btn {
+  padding: 7px 14px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.tool-btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: #0d0e14;
+  font-weight: 600;
+}
+.tool-btn.primary:hover { opacity: 0.85; box-shadow: 0 4px 14px rgba(106,247,200,0.35); }
+.tool-btn.primary:disabled { background: var(--border); color: var(--muted); pointer-events: none; }
+
+.grid-scroll {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.grid-container {
+  position: relative;
+  display: inline-block;
+}
+
+#outputCanvas {
+  display: block;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.5);
+  cursor: pointer;
+}
+
+.cell-highlight {
+  position: absolute;
+  pointer-events: none;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2), inset 0 0 0 1px rgba(106,247,200,0.3);
+  transition: left 0.12s ease, top 0.12s ease;
+  border-radius: 2px;
+  z-index: 10;
+}
+
+.progress-bar-wrap {
+  padding: 10px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75em;
+  color: var(--muted);
+  min-width: 60px;
+  text-align: right;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
+
+.modal h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.3em;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-sub { color: var(--muted); font-size: 0.85em; margin-bottom: 20px; }
+
+.modal img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+/* ミニグリッド 3×3 */
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  max-width: 120px;
+}
+.mini-cell {
+  aspect-ratio: 1;
+  background: var(--surface2);
+  transition: background 0.2s;
+  cursor: pointer;
+  font-size: 0;
+  border-radius: 3px;
+}
+.mini-cell.filled { background: var(--accent); opacity: 0.6; }
+.mini-cell.active { background: var(--accent2) !important; opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">GRID×9</div>
+  <div class="header-meta">3×3 画像タイル結合ツール</div>
+  <div class="header-status" id="headerStatus">0 / 9 タイル</div>
+</header>
+
+<div class="workspace">
+  <aside class="sidebar">
+    <div class="sidebar-scroll">
+      <div class="section-title">選択中のセル</div>
+      <div class="cell-indicator">
+        <div class="cell-num" id="cellNumDisplay">#1</div>
+        <div class="cell-coord" id="cellCoordDisplay">行 1 / 列 1<br>タイル (1,1)</div>
+      </div>
+
+      <div class="section-title">ミニマップ</div>
+      <div class="mini-grid" id="miniGrid"></div>
+
+      <div class="section-title">画像を追加</div>
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">📁</div>
+        <div class="drop-zone-text">ドラッグ&ドロップ</div>
+        <div class="drop-zone-sub">またはクリックして選択</div>
+      </div>
+
+      <div class="section-title">パレット（拡縮・移動）</div>
+      <div class="palette-wrapper" id="paletteWrapper">
+        <canvas class="palette-canvas" id="paletteCanvas"></canvas>
+        <div class="palette-empty" id="paletteEmpty">
+          <div class="palette-empty-icon">🖼️</div>
+          <div class="palette-empty-text">画像を追加してください<br>ホイール：拡縮<br>ドラッグ：移動</div>
+        </div>
+      </div>
+      <button class="set-btn" id="setBtn" disabled>✂️ 切り抜いてセルにセット</button>
+      <button class="clear-btn" id="clearBtn">✕ このセルをクリア</button>
+
+      <div class="section-title">使い方</div>
+      <div class="info-box">
+        <ol>
+          <li>グリッドのセルをクリックして選択</li>
+          <li>画像をドロップして追加</li>
+          <li>パレットで位置・サイズを調整</li>
+          <li>「セット」で確定、次のセルへ</li>
+          <li>9枚揃ったらダウンロード</li>
+        </ol>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <div class="grid-toolbar">
+      <span class="toolbar-label">3 × 3 GRID</span>
+      <div class="batch-btns">
+        <button class="tool-btn" id="clearAllBtn">🗑️ 全クリア</button>
+        <button class="tool-btn primary" id="downloadBtn" disabled>💾 ダウンロード</button>
+      </div>
+    </div>
+
+    <div class="grid-scroll" id="gridScroll">
+      <div class="grid-container" id="gridContainer">
+        <canvas id="outputCanvas"></canvas>
+        <div class="cell-highlight" id="cellHighlight"></div>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">0 / 9</div>
+    </div>
+  </main>
+</div>
+
+<!-- 完成モーダル -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>🎉 グリッド完成！</h2>
+    <p class="modal-sub" id="modalSizeText">1800 × 1800px</p>
+    <img id="modalImg" src="" alt="完成グリッド">
+    <div class="modal-btns">
+      <button class="tool-btn primary" id="modalDownload">💾 PNG ダウンロード</button>
+      <button class="tool-btn" id="modalClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+
+<script>
+(() => {
+  const COLS = 3, ROWS = 3, TOTAL = 9;
+  const CELL_PX = 600;
+  const OUT = CELL_PX * COLS; // 1800px
+
+  let activeSlot = 0;
+  let cellImgs = new Array(TOTAL).fill(null);
+
+  let pal = { img:null, scale:1, ox:0, oy:0, dragging:false, sx:0, sy:0, sox:0, soy:0, lastDist:0 };
+
+  const dropZone      = document.getElementById('dropZone');
+  const fileInput     = document.getElementById('fileInput');
+  const palWrapper    = document.getElementById('paletteWrapper');
+  const palCanvas     = document.getElementById('paletteCanvas');
+  const palEmpty      = document.getElementById('paletteEmpty');
+  const setBtn        = document.getElementById('setBtn');
+  const clearBtn      = document.getElementById('clearBtn');
+  const clearAllBtn   = document.getElementById('clearAllBtn');
+  const downloadBtn   = document.getElementById('downloadBtn');
+  const outputCanvas  = document.getElementById('outputCanvas');
+  const gridContainer = document.getElementById('gridContainer');
+  const cellHL        = document.getElementById('cellHighlight');
+  const miniGrid      = document.getElementById('miniGrid');
+  const progressFill  = document.getElementById('progressFill');
+  const progressText  = document.getElementById('progressText');
+  const headerStatus  = document.getElementById('headerStatus');
+  const cellNum       = document.getElementById('cellNumDisplay');
+  const cellCoord     = document.getElementById('cellCoordDisplay');
+  const modalOverlay  = document.getElementById('modalOverlay');
+  const modalImg      = document.getElementById('modalImg');
+  const modalSizeText = document.getElementById('modalSizeText');
+  const modalDownload = document.getElementById('modalDownload');
+  const modalClose    = document.getElementById('modalClose');
+
+  const palCtx = palCanvas.getContext('2d');
+  const outCtx = outputCanvas.getContext('2d');
+
+  outputCanvas.width  = OUT;
+  outputCanvas.height = OUT;
+
+  // ミニグリッド構築
+  for (let i = 0; i < TOTAL; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'mini-cell';
+    cell.dataset.slot = i;
+    cell.addEventListener('click', () => setActiveSlot(i));
+    miniGrid.appendChild(cell);
+  }
+
+  // 出力canvas描画
+  function redrawOutput() {
+    outCtx.clearRect(0, 0, OUT, OUT);
+    for (let i = 0; i < TOTAL; i++) {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      const x = col * CELL_PX, y = row * CELL_PX;
+      if (cellImgs[i]) {
+        outCtx.drawImage(cellImgs[i], x, y, CELL_PX, CELL_PX);
+      } else {
+        const shade = (col + row) % 2 === 0 ? '#181c27' : '#1c2130';
+        outCtx.fillStyle = shade;
+        outCtx.fillRect(x, y, CELL_PX, CELL_PX);
+        outCtx.fillStyle = 'rgba(255,255,255,0.06)';
+        outCtx.font = `bold ${CELL_PX * 0.22}px "Space Mono", monospace`;
+        outCtx.textAlign = 'center';
+        outCtx.textBaseline = 'middle';
+        outCtx.fillText(String(i + 1), x + CELL_PX / 2, y + CELL_PX / 2);
+      }
+    }
+    // グリッド線
+    outCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+    outCtx.lineWidth = 4;
+    for (let c = 1; c < COLS; c++) {
+      outCtx.beginPath(); outCtx.moveTo(c * CELL_PX, 0); outCtx.lineTo(c * CELL_PX, OUT); outCtx.stroke();
+    }
+    for (let r = 1; r < ROWS; r++) {
+      outCtx.beginPath(); outCtx.moveTo(0, r * CELL_PX); outCtx.lineTo(OUT, r * CELL_PX); outCtx.stroke();
+    }
+  }
+
+  redrawOutput();
+
+  function fitCanvas() {
+    const scroll = document.getElementById('gridScroll');
+    const availW = scroll.clientWidth  - 40;
+    const availH = scroll.clientHeight - 40;
+    const size = Math.min(availW, availH, 700);
+    outputCanvas.style.width  = size + 'px';
+    outputCanvas.style.height = size + 'px';
+    gridContainer.style.width  = size + 'px';
+    gridContainer.style.height = size + 'px';
+    updateHighlight();
+  }
+
+  window.addEventListener('resize', fitCanvas);
+  requestAnimationFrame(fitCanvas);
+
+  function updateHighlight() {
+    const w = outputCanvas.offsetWidth || 600;
+    const cellW = w / COLS;
+    const col = activeSlot % COLS;
+    const row = Math.floor(activeSlot / COLS);
+    cellHL.style.left   = (col * cellW) + 'px';
+    cellHL.style.top    = (row * cellW) + 'px';
+    cellHL.style.width  = cellW + 'px';
+    cellHL.style.height = cellW + 'px';
+  }
+
+  outputCanvas.addEventListener('click', e => {
+    const rect = outputCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const col = Math.floor(x / (rect.width  / COLS));
+    const row = Math.floor(y / (rect.height / ROWS));
+    setActiveSlot(row * COLS + col);
+  });
+
+  function setActiveSlot(i) {
+    i = Math.max(0, Math.min(TOTAL - 1, i));
+    activeSlot = i;
+    document.querySelectorAll('.mini-cell').forEach((el, idx) => {
+      el.classList.toggle('active', idx === i);
+    });
+    updateHighlight();
+    updateCellInfo();
+  }
+
+  function updateCellInfo() {
+    const i = activeSlot;
+    const col = (i % COLS) + 1;
+    const row = Math.floor(i / COLS) + 1;
+    cellNum.textContent = '#' + (i + 1);
+    cellCoord.textContent = `行 ${row} / 列 ${col}\nタイル (${row},${col})`;
+  }
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadToPalette(e.target.files[0]);
+    fileInput.value = '';
+  });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadToPalette(f);
+  });
+
+  function loadToPalette(file) {
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        pal.img = img;
+        const pw = palCanvas.offsetWidth  || 280;
+        const ph = palCanvas.offsetHeight || 280;
+        pal.scale = Math.max(pw / img.width, ph / img.height);
+        pal.ox = (pw - img.width  * pal.scale) / 2;
+        pal.oy = (ph - img.height * pal.scale) / 2;
+        palEmpty.style.display = 'none';
+        setBtn.disabled = false;
+        resizePal(); drawPalette();
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  function resizePal() {
+    const rect = palWrapper.getBoundingClientRect();
+    palCanvas.width  = rect.width;
+    palCanvas.height = rect.height;
+  }
+  window.addEventListener('resize', () => { if (pal.img) { resizePal(); drawPalette(); } });
+
+  function drawPalette() {
+    if (!pal.img) return;
+    const W = palCanvas.width, H = palCanvas.height;
+    palCtx.clearRect(0, 0, W, H);
+    palCtx.fillStyle = '#0a0c14';
+    palCtx.fillRect(0, 0, W, H);
+    palCtx.drawImage(pal.img, pal.ox, pal.oy, pal.img.width * pal.scale, pal.img.height * pal.scale);
+
+    const size = Math.min(W, H) * 0.82;
+    const cx = (W - size) / 2, cy = (H - size) / 2;
+
+    palCtx.fillStyle = 'rgba(0,0,0,0.55)';
+    palCtx.fillRect(0, 0, W, cy);
+    palCtx.fillRect(0, cy + size, W, H - cy - size);
+    palCtx.fillRect(0, cy, cx, size);
+    palCtx.fillRect(cx + size, cy, W - cx - size, size);
+
+    palCtx.strokeStyle = 'rgba(106,247,200,0.85)';
+    palCtx.lineWidth = 2;
+    palCtx.strokeRect(cx, cy, size, size);
+
+    palCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+    palCtx.lineWidth = 1;
+    for (let t = 1; t < 3; t++) {
+      palCtx.beginPath(); palCtx.moveTo(cx + size*t/3, cy); palCtx.lineTo(cx + size*t/3, cy+size); palCtx.stroke();
+      palCtx.beginPath(); palCtx.moveTo(cx, cy + size*t/3); palCtx.lineTo(cx+size, cy + size*t/3); palCtx.stroke();
+    }
+    const hs = 14; palCtx.strokeStyle='white'; palCtx.lineWidth=2.5;
+    [[cx,cy,1,1],[cx+size,cy,-1,1],[cx,cy+size,1,-1],[cx+size,cy+size,-1,-1]].forEach(([x,y,dx,dy])=>{
+      palCtx.beginPath(); palCtx.moveTo(x+dx*hs,y); palCtx.lineTo(x,y); palCtx.lineTo(x,y+dy*hs); palCtx.stroke();
+    });
+  }
+
+  palWrapper.addEventListener('wheel', e => {
+    e.preventDefault(); if (!pal.img) return;
+    const rect = palCanvas.getBoundingClientRect();
+    zoomAt(e.clientX-rect.left, e.clientY-rect.top, e.deltaY<0?1.1:0.9);
+  }, { passive:false });
+
+  function zoomAt(mx, my, f) {
+    const ns = Math.max(0.05, Math.min(30, pal.scale * f));
+    const sf = ns / pal.scale;
+    pal.ox = mx - sf*(mx-pal.ox); pal.oy = my - sf*(my-pal.oy);
+    pal.scale = ns; drawPalette();
+  }
+
+  palWrapper.addEventListener('mousedown', e => {
+    if (!pal.img) return;
+    pal.dragging=true; pal.sx=e.clientX; pal.sy=e.clientY; pal.sox=pal.ox; pal.soy=pal.oy;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!pal.dragging) return;
+    pal.ox = pal.sox+(e.clientX-pal.sx); pal.oy = pal.soy+(e.clientY-pal.sy); drawPalette();
+  });
+  window.addEventListener('mouseup', () => { pal.dragging=false; });
+
+  palWrapper.addEventListener('touchstart', e => {
+    e.preventDefault(); if (!pal.img) return;
+    if (e.touches.length===1) {
+      pal.dragging=true; pal.sx=e.touches[0].clientX; pal.sy=e.touches[0].clientY;
+      pal.sox=pal.ox; pal.soy=pal.oy;
+    } else { pal.dragging=false; pal.lastDist=tDist(e.touches); }
+  }, {passive:false});
+  palWrapper.addEventListener('touchmove', e => {
+    e.preventDefault(); if (!pal.img) return;
+    if (e.touches.length===1 && pal.dragging) {
+      pal.ox = pal.sox+(e.touches[0].clientX-pal.sx);
+      pal.oy = pal.soy+(e.touches[0].clientY-pal.sy); drawPalette();
+    } else if (e.touches.length===2) {
+      const d=tDist(e.touches), m=tMid(e.touches), rect=palCanvas.getBoundingClientRect();
+      zoomAt(m.x-rect.left, m.y-rect.top, d/pal.lastDist); pal.lastDist=d;
+    }
+  }, {passive:false});
+  palWrapper.addEventListener('touchend', ()=>{ pal.dragging=false; });
+
+  function tDist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+  function tMid(t) { return {x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2}; }
+
+  setBtn.addEventListener('click', () => {
+    if (!pal.img) return;
+    const W=palCanvas.width, H=palCanvas.height;
+    const size=Math.min(W,H)*0.82;
+    const cx=(W-size)/2, cy=(H-size)/2;
+    const imgX=(cx-pal.ox)/pal.scale, imgY=(cy-pal.oy)/pal.scale, imgS=size/pal.scale;
+
+    const tmp=document.createElement('canvas');
+    tmp.width=tmp.height=CELL_PX;
+    tmp.getContext('2d').drawImage(pal.img, imgX, imgY, imgS, imgS, 0, 0, CELL_PX, CELL_PX);
+
+    const cropped=new Image();
+    cropped.onload = () => {
+      cellImgs[activeSlot] = cropped;
+      updateMiniCell(activeSlot, true);
+      redrawOutput();
+      updateProgress();
+
+      let next = -1;
+      for (let i=activeSlot+1; i<TOTAL; i++) { if (!cellImgs[i]) { next=i; break; } }
+      if (next===-1) for (let i=0; i<activeSlot; i++) { if (!cellImgs[i]) { next=i; break; } }
+      if (next !== -1) setActiveSlot(next);
+
+      if (cellImgs.every(v => v !== null)) onComplete();
+    };
+    cropped.src = tmp.toDataURL('image/png');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    cellImgs[activeSlot] = null;
+    updateMiniCell(activeSlot, false);
+    redrawOutput();
+    updateProgress();
+    downloadBtn.disabled = cellImgs.every(v => v === null);
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    if (!confirm('全タイルをクリアしますか？')) return;
+    cellImgs = new Array(TOTAL).fill(null);
+    document.querySelectorAll('.mini-cell').forEach(el => el.classList.remove('filled'));
+    redrawOutput();
+    updateProgress();
+    downloadBtn.disabled = true;
+  });
+
+  function updateMiniCell(i, filled) {
+    const cells = document.querySelectorAll('.mini-cell');
+    if (cells[i]) cells[i].classList.toggle('filled', filled);
+  }
+
+  function updateProgress() {
+    const filled = cellImgs.filter(v => v !== null).length;
+    progressFill.style.width = (filled/TOTAL*100) + '%';
+    progressText.textContent = filled + ' / 9';
+    headerStatus.textContent = filled + ' / 9 タイル';
+    downloadBtn.disabled = filled === 0;
+  }
+
+  function onComplete() {
+    const url = outputCanvas.toDataURL('image/png');
+    modalImg.src = url;
+    modalSizeText.textContent = OUT + ' × ' + OUT + 'px (PNG)';
+    modalOverlay.classList.add('show');
+    modalDownload.onclick = () => {
+      const a=document.createElement('a'); a.href=url;
+      a.download='grid9_'+Date.now()+'.png'; a.click();
+    };
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    const url = outputCanvas.toDataURL('image/png');
+    const a=document.createElement('a'); a.href=url;
+    a.download='grid9_'+Date.now()+'.png'; a.click();
+  });
+
+  modalClose.addEventListener('click', () => modalOverlay.classList.remove('show'));
+  modalOverlay.addEventListener('click', e => { if (e.target===modalOverlay) modalOverlay.classList.remove('show'); });
+
+  resizePal();
+  setActiveSlot(0);
+  updateProgress();
+  requestAnimationFrame(fitCanvas);
+})();
+</script>
+</body>
+</html>
